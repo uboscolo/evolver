@@ -1,6 +1,7 @@
 import pexpect
 import datetime
 import time
+import re
 from evolve_log import *
 
 logger = GetLogger()
@@ -83,6 +84,8 @@ class Connect(object):
                 if self.options.has_key("verbose"):
                     logger.info("GENERIC PROMPT: %s" % (self.connection_id.after))
                 retVal = self.connection_id.before
+                #retVal = self.connection_id.match.group()
+                #retVal = self.connection_id.after
                 break
             else:
                 if self.options.has_key("verbose"):
@@ -123,6 +126,23 @@ class Connect(object):
         for line in cmd_list:
             self.connection_id.sendline(line)
             res = self.__Expect()
+            for line in res.splitlines():
+                #res_obj =  re.search(r'.*Device (.*) does not exist', line)
+                #if res_obj:
+                #    logger.error("Error, %s" % res_obj.group())
+                #    assert False
+                res_obj =  re.search(r'(ERROR|Error|error):.*', line)
+                if res_obj:
+                    logger.error("Error, %s" % res_obj.group())
+                    assert False
+                res_obj =  re.search(r'RTNETLINK answers:(.*)', line)
+                if res_obj:
+                    logger.error("Error, %s" % res_obj.group())
+                    assert False
+                #res_obj =  re.search(r'.*Invalid command at', line)
+                #if res_obj:
+                #    logger.error("Error, %s" % res_obj.group())
+                #    assert False
         return res
 
     def Close(self):

@@ -18,8 +18,8 @@ class Host(object):
         self.interfaces = [ ]
         self.interfaces_by_name = { }
 
-    def AddInterface(self, name):
-        new_intf = Interface(name)
+    def AddInterface(self, name, bandwidth):
+        new_intf = Interface(name, bandwidth)
         self.interfaces.append(new_intf)
         self.interfaces_by_name[name] = new_intf
 
@@ -39,8 +39,8 @@ class DebianHost(Host):
         self.ipv4_offset = 256
         self.ipv6_offset = 65536
 
-    def AddInterface(self, name):
-        new_intf = LinuxInterface(name)
+    def AddInterface(self, name, bandwidth):
+        new_intf = LinuxInterface(name, bandwidth)
         self.interfaces.append(new_intf)
         self.interfaces_by_name[name] = new_intf
         new_intf.Bringup(self.conn)
@@ -57,6 +57,8 @@ class StarOsHost(Host):
         self.syslog_server = None
         self.crash_server = None
         self.bulkstats_server = None
+        self.ipv4_offset = 256
+        self.ipv6_offset = 65536
 
 
 class Switch(Host):
@@ -65,6 +67,13 @@ class Switch(Host):
         super(Switch, self).__init__(name)
         self.username = "admin"
         self.password = "starent"
+        self.ipv4_offset = 512
+        self.ipv6_offset = 131072
+
+    def AddInterface(self, name, bandwidth):
+        new_intf = SwitchInterface(name, bandwidth)
+        self.interfaces.append(new_intf)
+        self.interfaces_by_name[name] = new_intf
 
 
 class Parser(object):
@@ -95,7 +104,7 @@ class Parser(object):
             m.type = type
             new_host.make = m
         new_host.domain = domain
-        system.Add(new_host)
+        system.AddEquipment(new_host)
 
     def __AddLinks(self, system, tag):
         bw = tag.attrib['bandwidth']
@@ -112,7 +121,7 @@ class Parser(object):
         for index in range(0,2):
             node = system.equipment_by_name[nodes[index]]
             new_link.nodes.append(node)
-            node.AddInterface(intfs[index])
+            node.AddInterface(intfs[index], bw)
             intf = node.interfaces_by_name[intfs[index]] 
             new_link.interfaces.append(intf)
         for next_tag in tag:
@@ -124,7 +133,7 @@ class Parser(object):
             if 'vr' in next_tag.attrib.keys():
                 net.vr = next_tag.attrib['vr']
             new_link.AddConnectivity(net)
-
+            new_link.CheckConnectivity()
 
     def ParseXml(self):
         tree = ET.parse(self.xml_file)
@@ -142,7 +151,6 @@ class Parser(object):
             else: 
                 logger.error("Unkwnon tag %s" % next_tag.tag)
                 assert False
-        
         return sys
 
 
@@ -154,7 +162,7 @@ class System(object):
         self.equipment_by_name = { }
         self.links = [ ]
    
-    def Add(self, host):
+    def AddEquipment(self, host):
         self.equipment.append(host)
         self.equipment_by_name[host.name] = host
         host.Connect()
@@ -194,9 +202,18 @@ class Link(object):
         for i in range(0, 2):
             node = self.nodes[i]
             intf = self.interfaces[i]
-            for c in self.connections:
-                intf.Networks(node, c)
+            intf.AddLink(node, conn)
+            intf.AddConnectivity(node, conn)
 
+    def CheckConnectivity(self):
+        node = self.nodes[0]
+        remote_node = self.nodes[0]
+        intf = self.interfaces[0]
+        for c in self.connections:
+            if intf.Ping(c, node, remote_node):
+                logger.error("Can't ping remote node")
+                assert False
+ 
     def Display(self):
         logger.debug("Link %s" % self.name)
         for n in self.nodes:
@@ -209,41 +226,44 @@ class Link(object):
 
 class Interface(object):
 
-    def __init__(self, name):
+    def __init__(self, name, bandwidth):
         self.name = name
+        self.bandwidth = bandwidth
 
-    def Add(self, network):
-        self.networks.append(network)
-
-    def Networks(self, node, net):
+    def AddLink(self, node, net):
         logger.info("Networks bypass")
+
+    def AddConnectivity(self, node, net):
+        logger.info("Networks bypass")
+
+    def Ping(self, net, node, remote_node):
+        logger.warning("bypass")
 
 
 class LinuxInterface(Interface):
 
-    def __init__(self, name):
-        super(LinuxInterface, self).__init__(name)
+    def __init__(self, name, bandwidth):
+        super(LinuxInterface, self).__init__(name, bandwidth)
 
     def Bringup(self, conn):
-        # Migth need to extend as Linux interface
-        # 10000 should be set based on 10G Bandwidth
-        cmd = [ ]
-        cmd.append("ip link set dev " + self.name + " qlen 10000 up")
-        # validate
-        r = conn.Run(cmd)
+        if self.bandwidth == "10G":
+            cmd_string = "ip link set dev %s qlen 10000 up" % self.name
+        else:
+            cmd_string = "ip link set dev %s" % self.name
+        r = conn.Run([cmd_string])
+        # validate, check errors
 
     def RingSize(self, conn):
-        # Migth need to extend as Linux interface
-        cmd = [ ]
-        cmd.append("ethtool -g " + self.name)
-        r = conn.Run(cmd)
+        cmd_string = "ethtool -g %s" % self.name
+        r = conn.Run([cmd_string])
+        # Validation
         res1 = self.TvParse(r, "Pre-set maximums", "Current hardware settings", ["RX", "TX"])
         res2 = self.TvParse(r, "Current hardware settings", None, ["RX", "TX"])
         for i in res1.keys():
             if res2[i] != res1[i]:
-                cmd = [ ]
-                cmd.append("ethtool -G " + self.name + " " + i.lower() + " " + res1[i])
-                r = conn.Run(cmd)
+                cmd_string = "ethtool -G %s %s %s" % (self.name, i.lower(), res1[i])
+                r = conn.Run([cmd_string])
+                # Validation needed
 
     def TvParse(self, input, top, bottom, tags):
         state = "STARTED"
@@ -273,42 +293,138 @@ class LinuxInterface(Interface):
                 logger.error("Unexpected state: %s" % state)
         return results
 
-    def Networks(self, node, net):
-        # check if links exists
+    def AddLink(self, node, net):
+        # check if links exists, create otherwise
+        link_exists = True        
         conn = node.conn
-        ipv4_offset = node.ipv4_offset
-        ipv6_offset = node.ipv6_offset
-        cmd = [ ]
-        cmd.append("setvr " + net.vr + " ip link show dev " + self.name + "." + net.vlan)
-        r = conn.Run(cmd)
+        cmd_string = "setvr %s ip link show dev %s.%s" % (net.vr, self.name, net.vlan)
+        r = conn.Run([cmd_string])
         for line in r.splitlines():
             res_obj = re.search(r'Device (.*) does not exist.', line)
             if res_obj:
-                cmd = [ ]
-                cmd.append("modprobe 8021q")
-                cmd.append("setvr " + net.vr + " vconfig add " + self.name + " " + net.vlan)
-                cmd.append("setvr " + net.vr + " ip link set dev " + self.name + "." + net.vlan + " up")
-                print "cmd: %s" % cmd
-                r = conn.Run(cmd)
-                print "R: %s" % r
-        # check if network exists
-        cmd = [ ]
-        cmd.append("setvr " + net.vr + " ip addr show dev " + self.name + "." + net.vlan)
-        r = conn.Run(cmd)
-        found = 0
+                link_exists = False
+                cmd_string = "modprobe 8021q"
+                r = conn.Run([cmd_string])
+        if link_exists:
+            cmd_string = "setvr %s vconfig rem %s.%s" % (net.vr, self.name, net.vlan)
+            r = conn.Run([cmd_string])
+        cmd_string = "setvr %s vconfig add %s %s" % (net.vr, self.name, net.vlan)
+        r = conn.Run([cmd_string])
+        cmd_string = "setvr %s ip link set dev %s.%s up" % (net.vr, self.name, net.vlan)
+        r = conn.Run([cmd_string])
+
+    def AddConnectivity(self, node, net):
+        conn = node.conn
+        ipv4_offset = node.ipv4_offset
+        ipv6_offset = node.ipv6_offset
         ipv4 = net.ipv4
         ipv4.value += (ipv4_offset + 1)
+        ipv6 = net.ipv6
+        ipv6.__iadd__(ipv6_offset + 1)
+        cmd_string = "setvr %s ip addr add %s/%s dev %s.%s" % (net.vr, ipv4.ip, ipv4.prefixlen, self.name, net.vlan)
+        r = conn.Run([cmd_string])
+        cmd_string = "setvr %s ip -6 addr add %s/%s dev %s.%s" % (net.vr, ipv6.ip, ipv6.prefixlen, self.name, net.vlan)
+        r = conn.Run([cmd_string])
+
+        # ipv4 no need to check as I have removed the link
+        #cmd_string = "setvr %s ip addr show dev %s.%s" % (net.vr, self.name, net.vlan)
+        #r = conn.Run([cmd_string])
+        #found = 0
+        #for line in r.splitlines():
+        #    res_obj = re.search(r'inet ([\d./]+) ', line)
+        #    search_string = "%s/%s" % (ipv4.ip, ipv4.prefixlen)
+        #    if res_obj and res_obj.group(1) == search_string:
+        #        logger.info("Found IPv4 %s" % ipv4.ip)
+        #        found = 1
+        #        break
+        #if not found:
+        #    cmd_string = "setvr %s ip addr add %s/%s dev %s.%s" % (net.vr, ipv4.ip, ipv4.prefixlen, self.name, net.vlan)
+        #    r = conn.Run([cmd_string])
+        # ipv6
+        #cmd_string = "setvr %s ip -6 addr show dev %s.%s" % (net.vr, self.name, net.vlan)
+        #r = conn.Run([cmd_string])
+        #found = 0
+        #for line in r.splitlines():
+        #    res_obj = re.search(r'inet6 ([\w\d:/]+) ', line)
+        #    search_string = "%s/%s" % (ipv6.ip, ipv6.prefixlen)
+        #    if res_obj and res_obj.group(1) == search_string:
+        #        logger.info("Found IPv6 %s" % ipv6.ip)
+        #        found = 1
+        #        break
+        #if not found:
+        #    cmd_string = "setvr %s ip -6 addr add %s/%s dev %s.%s" % (net.vr, ipv6.ip, ipv6.prefixlen, self.name, net.vlan)
+        #    r = conn.Run([cmd_string])
+
+    def Ping(self, net, node, remote_node):
+        status = False
+        conn = node.conn
+        ipv4 = net.ipv4
+        ipv4.value += (remote_node.ipv4_offset + 1)
+        cmd_string = "ping -c 2 -w 1 %s" % ipv4.ip
+        r = conn.Run([cmd_string])
         for line in r.splitlines():
-            res_obj = re.search(r'inet ([\d./]+) ', line)
-            if res_obj and res_obj.group(1) == str(ipv4.ip) + "/" + str(ipv4.prefixlen):
-                logger.info("Found IPv4 %s" % ipv4.ip)
-                found = 1
-                break
-        if not found:
-            cmd = [ ]
-            cmd.append("setvr " + net.vr + " ip addr add " + str(ipv4.ip) + "/" + str(ipv4.prefixlen) + " dev " + self.name + "." + net.vlan)
-            r = conn.Run(cmd)
-          
+            print "Line: %s" % line
+        return status
+
+
+class SwitchInterface(Interface):
+
+    def __init__(self, name, bandwidth):
+        super(SwitchInterface, self).__init__(name, bandwidth)
+
+    def AddLink(self, node, net):
+        conn = node.conn
+        # check if vlan exists
+        cmd_string = "show vlan %s" % net.vlan
+        r = conn.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'\% Invalid command at \'\^\' marker.', line)
+            if res_obj:
+                cmd_string = "configure terminal"
+                r = conn.Run([cmd_string])
+                cmd_string = "vlan %s" % net.vlan
+                r = conn.Run([cmd_string])
+                cmd_string = "exit"
+                r = conn.Run([cmd_string])
+        cmd_string = "configure terminal"
+        r = conn.Run([cmd_string])
+        cmd_string = "no interface vlan %s" % net.vlan
+        r = conn.Run([cmd_string])
+        cmd_string = "interface vlan %s" % net.vlan
+        r = conn.Run([cmd_string])
+        cmd_string = "end"
+        r = conn.Run([cmd_string])
+
+    def AddConnectivity(self, node, net):
+        conn = node.conn
+        ipv4_offset = node.ipv4_offset
+        ipv6_offset = node.ipv6_offset
+        ipv4 = net.ipv4
+        ipv4.value += (ipv4_offset + 1)
+        ipv6 = net.ipv6
+        ipv6.value += (ipv6_offset + 1)
+        cmd_string = "configure terminal"
+        r = conn.Run([cmd_string])
+        cmd_string = "interface vlan %s" % net.vlan
+        r = conn.Run([cmd_string])
+        cmd_string = "ip address %s/%s" % (ipv4.ip, ipv4.prefixlen)
+        r = conn.Run([cmd_string])
+        cmd_string = "ipv6 address %s/%s" % (ipv6.ip, ipv6.prefixlen)
+        r = conn.Run([cmd_string])
+        cmd_string = "end"
+
+    def Ping(self, net, node, remote_node):
+        status = False
+        conn = node.conn
+        ipv4 = net.ipv4
+        ipv4.value += (remote_node.ipv4_offset + 1)
+        cmd_string = "ping %s count 2 timeout 1 vrf default" % ipv4.ip
+        r = conn.Run([cmd_string])
+        for line in r.splitlines():
+            print "Line: %s" % line
+        return status
+
+
 
 class Network(object):
 
