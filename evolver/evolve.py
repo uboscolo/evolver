@@ -19,9 +19,8 @@ class Host(object):
         self.interfaces_by_name = { }
 
     def AddInterface(self, name, bandwidth):
-        new_intf = Interface(name, bandwidth)
-        self.interfaces.append(new_intf)
-        self.interfaces_by_name[name] = new_intf
+        logger.error("Method not implemented")
+        assert False
 
     def Connect(self):
         self.hostname = self.name + "." + self.domain
@@ -59,6 +58,11 @@ class StarOsHost(Host):
         self.bulkstats_server = None
         self.ipv4_offset = 256
         self.ipv6_offset = 65536
+
+    def AddInterface(self, name, bandwidth):
+        new_intf = StarOsInterface(name, bandwidth)
+        self.interfaces.append(new_intf)
+        self.interfaces_by_name[name] = new_intf
 
 
 class Switch(Host):
@@ -207,12 +211,11 @@ class Link(object):
 
     def CheckConnectivity(self):
         node = self.nodes[0]
-        remote_node = self.nodes[0]
         intf = self.interfaces[0]
-        for c in self.connections:
-            if intf.Ping(c, node, remote_node):
-                logger.error("Can't ping remote node")
-                assert False
+        remote_intf = self.interfaces[1]
+        if intf.PingCheck(node, remote_intf):
+            logger.error("Ping check failed")
+            assert False
  
     def Display(self):
         logger.debug("Link %s" % self.name)
@@ -229,14 +232,15 @@ class Interface(object):
     def __init__(self, name, bandwidth):
         self.name = name
         self.bandwidth = bandwidth
+        self.networks = [ ]
 
     def AddLink(self, node, net):
-        logger.info("Networks bypass")
+        logger.warning("bypass")
 
     def AddConnectivity(self, node, net):
-        logger.info("Networks bypass")
+        logger.warning("bypass")
 
-    def Ping(self, net, node, remote_node):
+    def PingCheck(self, node, remote_intf):
         logger.warning("bypass")
 
 
@@ -317,53 +321,29 @@ class LinuxInterface(Interface):
         conn = node.conn
         ipv4_offset = node.ipv4_offset
         ipv6_offset = node.ipv6_offset
-        ipv4 = net.ipv4
-        ipv4.value += (ipv4_offset + 1)
-        ipv6 = net.ipv6
-        ipv6.__iadd__(ipv6_offset + 1)
-        cmd_string = "setvr %s ip addr add %s/%s dev %s.%s" % (net.vr, ipv4.ip, ipv4.prefixlen, self.name, net.vlan)
+        new_net = Network()
+        self.networks.append(new_net)
+        new_net.AddIpv4Network(net.ipv4.ipv4())
+        new_net.AddIpv6Network(net.ipv6.ipv6())
+        new_net.ipv4.value += (ipv4_offset + 1)
+        new_net.ipv6.__iadd__(ipv6_offset + 1)
+        new_net.vr = net.vr
+        new_net.vlan = net.vlan
+        cmd_string = "setvr %s ip addr add %s/%s dev %s.%s" % (new_net.vr, 
+            new_net.ipv4.ip, new_net.ipv4.prefixlen, self.name, new_net.vlan)
         r = conn.Run([cmd_string])
-        cmd_string = "setvr %s ip -6 addr add %s/%s dev %s.%s" % (net.vr, ipv6.ip, ipv6.prefixlen, self.name, net.vlan)
+        cmd_string = "setvr %s ip -6 addr add %s/%s dev %s.%s" % (new_net.vr, 
+            new_net.ipv6.ip, new_net.ipv6.prefixlen, self.name, new_net.vlan)
         r = conn.Run([cmd_string])
 
-        # ipv4 no need to check as I have removed the link
-        #cmd_string = "setvr %s ip addr show dev %s.%s" % (net.vr, self.name, net.vlan)
-        #r = conn.Run([cmd_string])
-        #found = 0
-        #for line in r.splitlines():
-        #    res_obj = re.search(r'inet ([\d./]+) ', line)
-        #    search_string = "%s/%s" % (ipv4.ip, ipv4.prefixlen)
-        #    if res_obj and res_obj.group(1) == search_string:
-        #        logger.info("Found IPv4 %s" % ipv4.ip)
-        #        found = 1
-        #        break
-        #if not found:
-        #    cmd_string = "setvr %s ip addr add %s/%s dev %s.%s" % (net.vr, ipv4.ip, ipv4.prefixlen, self.name, net.vlan)
-        #    r = conn.Run([cmd_string])
-        # ipv6
-        #cmd_string = "setvr %s ip -6 addr show dev %s.%s" % (net.vr, self.name, net.vlan)
-        #r = conn.Run([cmd_string])
-        #found = 0
-        #for line in r.splitlines():
-        #    res_obj = re.search(r'inet6 ([\w\d:/]+) ', line)
-        #    search_string = "%s/%s" % (ipv6.ip, ipv6.prefixlen)
-        #    if res_obj and res_obj.group(1) == search_string:
-        #        logger.info("Found IPv6 %s" % ipv6.ip)
-        #        found = 1
-        #        break
-        #if not found:
-        #    cmd_string = "setvr %s ip -6 addr add %s/%s dev %s.%s" % (net.vr, ipv6.ip, ipv6.prefixlen, self.name, net.vlan)
-        #    r = conn.Run([cmd_string])
-
-    def Ping(self, net, node, remote_node):
+    def PingCheck(self, node, remote_intf):
         status = False
         conn = node.conn
-        ipv4 = net.ipv4
-        ipv4.value += (remote_node.ipv4_offset + 1)
-        cmd_string = "ping -c 2 -w 1 %s" % ipv4.ip
-        r = conn.Run([cmd_string])
-        for line in r.splitlines():
-            print "Line: %s" % line
+        for net in remote_intf.networks:
+            cmd_string = "ping -c 2 -w 1 %s" % net.ipv4.ip
+            r = conn.Run([cmd_string])
+            for line in r.splitlines():
+                print "Line: %s" % line
         return status
 
 
@@ -375,7 +355,7 @@ class SwitchInterface(Interface):
     def AddLink(self, node, net):
         conn = node.conn
         # check if vlan exists
-        cmd_string = "show vlan %s" % net.vlan
+        cmd_string = "show vlan id %s" % net.vlan
         r = conn.Run([cmd_string])
         for line in r.splitlines():
             res_obj = re.search(r'\% Invalid command at \'\^\' marker.', line)
@@ -388,9 +368,11 @@ class SwitchInterface(Interface):
                 r = conn.Run([cmd_string])
         cmd_string = "configure terminal"
         r = conn.Run([cmd_string])
-        cmd_string = "no interface vlan %s" % net.vlan
+        cmd_string = "interface ethernet %s" % self.name
         r = conn.Run([cmd_string])
-        cmd_string = "interface vlan %s" % net.vlan
+        cmd_string = "switchport mode trunk"
+        r = conn.Run([cmd_string])
+        cmd_string = "switchport trunk allowed vlan add %s" % net.vlan
         r = conn.Run([cmd_string])
         cmd_string = "end"
         r = conn.Run([cmd_string])
@@ -399,32 +381,64 @@ class SwitchInterface(Interface):
         conn = node.conn
         ipv4_offset = node.ipv4_offset
         ipv6_offset = node.ipv6_offset
-        ipv4 = net.ipv4
-        ipv4.value += (ipv4_offset + 1)
-        ipv6 = net.ipv6
-        ipv6.value += (ipv6_offset + 1)
+        new_net = Network()
+        self.networks.append(new_net)
+        new_net.AddIpv4Network(net.ipv4.ipv4())
+        new_net.AddIpv6Network(net.ipv6.ipv6())
+        new_net.ipv4.value += (ipv4_offset + 1)
+        new_net.ipv6.__iadd__(ipv6_offset + 1)
+        new_net.vlan = net.vlan
+        new_net.vr = net.vr
         cmd_string = "configure terminal"
         r = conn.Run([cmd_string])
-        cmd_string = "interface vlan %s" % net.vlan
+        cmd_string = "no interface vlan %s" % new_net.vlan
         r = conn.Run([cmd_string])
-        cmd_string = "ip address %s/%s" % (ipv4.ip, ipv4.prefixlen)
+        cmd_string = "interface vlan %s" % new_net.vlan
         r = conn.Run([cmd_string])
-        cmd_string = "ipv6 address %s/%s" % (ipv6.ip, ipv6.prefixlen)
+        cmd_string = "ip address %s/%s" % (new_net.ipv4.ip, new_net.ipv4.prefixlen)
+        r = conn.Run([cmd_string])
+        cmd_string = "ipv6 address %s/%s" % (new_net.ipv6.ip, new_net.ipv6.prefixlen)
         r = conn.Run([cmd_string])
         cmd_string = "end"
 
-    def Ping(self, net, node, remote_node):
+    def PingCheck(self, node, remote_intf):
         status = False
         conn = node.conn
-        ipv4 = net.ipv4
-        ipv4.value += (remote_node.ipv4_offset + 1)
-        cmd_string = "ping %s count 2 timeout 1 vrf default" % ipv4.ip
-        r = conn.Run([cmd_string])
-        for line in r.splitlines():
-            print "Line: %s" % line
+        for net in remote_intf.networks:
+            cmd_string = "ping %s count 2 timeout 1 vrf default" % net.ipv4.ip
+            r = conn.Run([cmd_string])
+            for line in r.splitlines():
+                print "Line: %s" % line
         return status
 
 
+class StarOsInterface(Interface):
+
+    def __init__(self, name, bandwidth):
+        super(StarOsInterface, self).__init__(name, bandwidth)
+
+    def AddLink(self, node, net):
+        # check if links exists, fail otherwise
+        link_exists = True        
+        conn = node.conn
+        cmd_string = "context %s" % (net.vr)
+        r = conn.Run([cmd_string])
+        cmd_string = "show ip interface %s" % self.name
+        r = conn.Run([cmd_string])
+        # verify
+        assert link_exists
+ 
+    def AddConnectivity(self, node, net):
+        # check if network exists, fail otherwise
+        conn = node.conn
+        ipv4_offset = node.ipv4_offset
+        ipv6_offset = node.ipv6_offset
+        ipv4 = net.ipv4
+
+    def PingCheck(self, node, remote_intf):
+        status = False
+        conn = node.conn
+ 
 
 class Network(object):
 
