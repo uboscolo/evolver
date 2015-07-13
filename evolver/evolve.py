@@ -137,7 +137,7 @@ class Parser(object):
             if 'vr' in next_tag.attrib.keys():
                 net.vr = next_tag.attrib['vr']
             new_link.AddConnectivity(net)
-            new_link.CheckConnectivity()
+        new_link.CheckConnectivity()
 
     def ParseXml(self):
         tree = ET.parse(self.xml_file)
@@ -337,13 +337,18 @@ class LinuxInterface(Interface):
         r = conn.Run([cmd_string])
 
     def PingCheck(self, node, remote_intf):
-        status = False
+        status = True
         conn = node.conn
         for net in remote_intf.networks:
             cmd_string = "ping -c 2 -w 1 %s" % net.ipv4.ip
             r = conn.Run([cmd_string])
             for line in r.splitlines():
-                print "Line: %s" % line
+                res_obj = re.search(r'[\d]+ packets transmitted, [\d]+ received,( [\d+]+ errors ,)? ([\d.]+)\% packet loss, (time [\d\w]+)?', line)
+                if res_obj:
+                    loss = int(res_obj.group(2))
+                    logger.debug("packet loss %s", loss)
+                    if loss < 100:
+                        status = False
         return status
 
 
@@ -358,7 +363,7 @@ class SwitchInterface(Interface):
         cmd_string = "show vlan id %s" % net.vlan
         r = conn.Run([cmd_string])
         for line in r.splitlines():
-            res_obj = re.search(r'\% Invalid command at \'\^\' marker.', line)
+            res_obj = re.search(r'VLAN ([\d]+) not found in current VLAN database', line)
             if res_obj:
                 cmd_string = "configure terminal"
                 r = conn.Run([cmd_string])
@@ -372,6 +377,13 @@ class SwitchInterface(Interface):
         r = conn.Run([cmd_string])
         cmd_string = "switchport mode trunk"
         r = conn.Run([cmd_string])
+        cmd_string = "show interface ethernet %s switchport | grep \"Trunking VLANs Allowed\"" % self.name
+        r = conn.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'Trunking VLANs Allowed: 1-4094', line)
+            if res_obj:
+                cmd_string = "switchport trunk allowed vlan none"
+                r = conn.Run([cmd_string])
         cmd_string = "switchport trunk allowed vlan add %s" % net.vlan
         r = conn.Run([cmd_string])
         cmd_string = "end"
@@ -391,24 +403,38 @@ class SwitchInterface(Interface):
         new_net.vr = net.vr
         cmd_string = "configure terminal"
         r = conn.Run([cmd_string])
+        cmd_string = "vrf context %s" % new_net.vr
+        r = conn.Run([cmd_string])
+        cmd_string = "exit"
+        r = conn.Run([cmd_string])
         cmd_string = "no interface vlan %s" % new_net.vlan
         r = conn.Run([cmd_string])
         cmd_string = "interface vlan %s" % new_net.vlan
+        r = conn.Run([cmd_string])
+        cmd_string = "no shutdown"
+        r = conn.Run([cmd_string])
+        cmd_string = "vrf member %s" % new_net.vr 
         r = conn.Run([cmd_string])
         cmd_string = "ip address %s/%s" % (new_net.ipv4.ip, new_net.ipv4.prefixlen)
         r = conn.Run([cmd_string])
         cmd_string = "ipv6 address %s/%s" % (new_net.ipv6.ip, new_net.ipv6.prefixlen)
         r = conn.Run([cmd_string])
         cmd_string = "end"
+        r = conn.Run([cmd_string])
 
     def PingCheck(self, node, remote_intf):
-        status = False
         conn = node.conn
         for net in remote_intf.networks:
-            cmd_string = "ping %s count 2 timeout 1 vrf default" % net.ipv4.ip
+            status = True
+            cmd_string = "ping %s count 2 timeout 1 vrf %s" % (net.ipv4.ip, net.vr)
             r = conn.Run([cmd_string])
             for line in r.splitlines():
-                print "Line: %s" % line
+                res_obj = re.search(r'[\d]+ packets transmitted, [\d]+ packets received,( [\d+]+ errors ,)? ([\d.]+)\% packet loss', line)
+                if res_obj:
+                    loss = float(res_obj.group(2))
+                    logger.debug("packet loss %s", loss)
+                    if loss < 100:
+                        status = False
         return status
 
 
@@ -419,12 +445,16 @@ class StarOsInterface(Interface):
 
     def AddLink(self, node, net):
         # check if links exists, fail otherwise
-        link_exists = True        
+        link_exists =  False       
         conn = node.conn
         cmd_string = "context %s" % (net.vr)
         r = conn.Run([cmd_string])
-        cmd_string = "show ip interface %s" % self.name
+        cmd_string = "show ip interface | grep \"Bound to %s\"" % self.name
         r = conn.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'IP State:.*UP', line)
+            if res_obj:
+                link_exists =  True
         # verify
         assert link_exists
  
@@ -436,8 +466,21 @@ class StarOsInterface(Interface):
         ipv4 = net.ipv4
 
     def PingCheck(self, node, remote_intf):
-        status = False
         conn = node.conn
+        for net in remote_intf.networks:
+            status = True
+            cmd_string = "context %s" % net.vr
+            r = conn.Run([cmd_string])
+            cmd_string = "ping %s count 2" % net.ipv4.ip
+            r = conn.Run([cmd_string])
+            for line in r.splitlines():
+                res_obj = re.search(r'[\d]+ packets transmitted, [\d]+ received,( [\d+]+ errors ,)? ([\d.]+)\% packet loss, (time [\d\w]+)?', line)
+                if res_obj:
+                    loss = int(res_obj.group(2))
+                    logger.debug("packet loss %s", loss)
+                    if loss < 100:
+                        status = False
+        return status
  
 
 class Network(object):

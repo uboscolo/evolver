@@ -10,14 +10,14 @@
         <make name="Cisco" model="Nexus" type="5548"/>
     </device>
     <link bandwidth="10G" node_a="evo1" interface_a="5/10" node_b="evo-sw1" interface_b="1/1">
-        <ip_network vlan="1513" ipv4="172.17.0.0/16" ipv6="fd00:0001::/64" vr="3"/>
-        <ip_network vlan="1769" ipv4="172.19.0.0/16" ipv6="fd00:0003::/64" vr="2"/>
+        <ip_network vlan="1513" ipv4="172.17.0.0/16" ipv6="fd00:0001::/64" vr="pgw-1"/>
+        <ip_network vlan="1769" ipv4="172.19.0.0/16" ipv6="fd00:0003::/64" vr="ip-1"/>
     </link>
-    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/5" node_b="luto1" interface_b="eth0">
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/5" node_b="luto1" interface_b="eth2">
         <ip_network vlan="1001" ipv4="172.18.0.0/16" ipv6="fd00:0002:0000::/64" vr="1"/>
         <ip_network vlan="1065" ipv4="172.18.64.0/16" ipv6="fd00:0002:0100::/64" vr="2"/>
     </link>
-    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/6" node_b="luto1" interface_b="eth1">
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/6" node_b="luto1" interface_b="eth3">
         <ip_network vlan="1129" ipv4="172.18.128.0/16" ipv6="fd00:0002:0200::/64" vr="3"/>
         <ip_network vlan="1193" ipv4="172.18.192.0/16" ipv6="fd00:0002:0300::/64" vr="4"/>
     </link>
