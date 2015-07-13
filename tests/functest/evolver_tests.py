@@ -1,6 +1,6 @@
 from nose.tools import *
 import os
-from evolver.evolver import *
+from evolver.evolve import *
 
 def setup():
     try:
@@ -26,4 +26,3 @@ def test_1():
     except IOError:
         print "Could not open file"
         raise
-

@@ -145,7 +145,7 @@ class Parser(object):
         assert root_tag.tag == "system"
         name = root_tag.attrib['name']
         sys = System(name)
-        Logger("extensive", "/tmp/evolve.log")
+        #Logger("extensive", "/tmp/evolve.log")
 
         for next_tag in root_tag:
             if next_tag.tag == "device":

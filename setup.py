@@ -11,9 +11,9 @@ config = {
     'author_email': 'uboscolo@gmail.com',
     'version': '0.1',
     'install_requires': ['nose'],
-    'packages': ['ncl'],
+    'packages': ['evolver'],
     'scripts': [],
-    'name': 'ncl'
+    'name': 'evolver'
 }
 
 setup(**config)
