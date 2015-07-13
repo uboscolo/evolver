@@ -26,7 +26,7 @@ class Host(object):
         self.hostname = self.name + "." + self.domain
         self.conn = Connect(self.hostname, self.username, self.password)
         if self.conn.Open():
-            logger.info("Connection to %s Opened" % self.hostname)
+            logger.info("Connected to %s Opened" % self.hostname)
 
 
 class DebianHost(Host):
@@ -35,8 +35,8 @@ class DebianHost(Host):
         super(DebianHost, self).__init__(name)
         self.username = "root"
         self.password = "starent"
-        self.ipv4_offset = 256
-        self.ipv6_offset = 65536
+        self.ipv4_offset = 0
+        self.ipv6_offset = 0
 
     def AddInterface(self, name, bandwidth):
         new_intf = LinuxInterface(name, bandwidth)
@@ -56,8 +56,8 @@ class StarOsHost(Host):
         self.syslog_server = None
         self.crash_server = None
         self.bulkstats_server = None
-        self.ipv4_offset = 256
-        self.ipv6_offset = 65536
+        self.ipv4_offset = 0
+        self.ipv6_offset = 0
 
     def AddInterface(self, name, bandwidth):
         new_intf = StarOsInterface(name, bandwidth)
@@ -71,8 +71,8 @@ class Switch(Host):
         super(Switch, self).__init__(name)
         self.username = "admin"
         self.password = "starent"
-        self.ipv4_offset = 512
-        self.ipv6_offset = 131072
+        self.ipv4_offset = 128
+        self.ipv6_offset = 256
 
     def AddInterface(self, name, bandwidth):
         new_intf = SwitchInterface(name, bandwidth)
@@ -136,6 +136,8 @@ class Parser(object):
             net.AddIpv6Network(next_tag.attrib['ipv6'])
             if 'vr' in next_tag.attrib.keys():
                 net.vr = next_tag.attrib['vr']
+            if 'port_channel' in next_tag.attrib.keys():
+                net.port_channel = next_tag.attrib['port_channel']
             new_link.AddConnectivity(net)
         new_link.CheckConnectivity()
 
@@ -488,6 +490,7 @@ class Network(object):
     def __init__(self):
         self.vlan = None
         self.vr = None
+        self.port_channel = None
         self.ipv4 = None
         self.ipv6 = None
 
