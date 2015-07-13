@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<system name="new system">
+    <device name="luto1" domain="mitg-tew01.cisco.com" type="debian">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
+    <device name="evo1" domain="mitg-tew01.cisco.com" type="staros">
+        <make name="Cisco" model="ASR5500" type="MIO-DPC"/>
+    </device>
+    <device name="evo-sw1" domain="mitg-tew01.cisco.com" type="switch">
+        <make name="Cisco" model="Nexus" type="7706"/>
+    </device>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/10" node_b="evo-sw1" interface_b="1/21">
+        <ip_network vlan="1001" ipv4="172.17.0.0/16" ipv6="fd00:0001::/32"/>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/22" node_b="luto1" interface_b="5/10">
+        <ip_network vlan="1001" ipv4="172.18.0.0/16" ipv6="fd00:0002::/32"/>
+    </link>
+</system>
