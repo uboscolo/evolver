@@ -23,6 +23,7 @@ def test_1():
         p = Parser(xml_file)
         sys = p.ParseXml()
         sys.Display()
+        sys.CheckConnectivity()
     except IOError:
         print "Could not open file"
         raise

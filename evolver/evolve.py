@@ -129,17 +129,18 @@ class Parser(object):
             intf = node.interfaces_by_name[intfs[index]] 
             new_link.interfaces.append(intf)
         for next_tag in tag:
-            assert next_tag.tag == "ip_network"
+            assert next_tag.tag == "connectivity"
             net = Network()
             net.vlan = next_tag.attrib['vlan']
-            net.AddIpv4Network(next_tag.attrib['ipv4'])
-            net.AddIpv6Network(next_tag.attrib['ipv6'])
+            if 'ipv4' in next_tag.attrib.keys():
+                net.AddIpv4Network(next_tag.attrib['ipv4'])
+            if 'ipv6' in next_tag.attrib.keys():
+                net.AddIpv6Network(next_tag.attrib['ipv6'])
             if 'vr' in next_tag.attrib.keys():
                 net.vr = next_tag.attrib['vr']
             if 'port_channel' in next_tag.attrib.keys():
                 net.port_channel = next_tag.attrib['port_channel']
             new_link.AddConnectivity(net)
-        new_link.CheckConnectivity()
 
     def ParseXml(self):
         tree = ET.parse(self.xml_file)
@@ -184,6 +185,10 @@ class System(object):
             logger.debug("Host %s" % e.name)
         for l in self.links:
             l.Display()
+
+    def CheckConnectivity(self): 
+        for l in self.links:
+            l.CheckConnectivity()
 
 
 class Make(object):
@@ -321,25 +326,26 @@ class LinuxInterface(Interface):
 
     def AddConnectivity(self, node, net):
         conn = node.conn
-        ipv4_offset = node.ipv4_offset
-        ipv6_offset = node.ipv6_offset
         new_net = Network()
         self.networks.append(new_net)
-        new_net.AddIpv4Network(net.ipv4.ipv4())
-        new_net.AddIpv6Network(net.ipv6.ipv6())
-        new_net.ipv4.value += (ipv4_offset + 1)
-        new_net.ipv6.__iadd__(ipv6_offset + 1)
         new_net.vr = net.vr
         new_net.vlan = net.vlan
-        cmd_string = "setvr %s ip addr add %s/%s dev %s.%s" % (new_net.vr, 
-            new_net.ipv4.ip, new_net.ipv4.prefixlen, self.name, new_net.vlan)
-        r = conn.Run([cmd_string])
-        cmd_string = "setvr %s ip -6 addr add %s/%s dev %s.%s" % (new_net.vr, 
-            new_net.ipv6.ip, new_net.ipv6.prefixlen, self.name, new_net.vlan)
-        r = conn.Run([cmd_string])
+        if net.ipv4:
+            ipv4_offset = node.ipv4_offset
+            new_net.AddIpv4Network(net.ipv4.ipv4())
+            new_net.ipv4.value += (ipv4_offset + 1)
+            cmd_string = "setvr %s ip addr add %s/%s dev %s.%s" % (new_net.vr, 
+                new_net.ipv4.ip, new_net.ipv4.prefixlen, self.name, new_net.vlan)
+            r = conn.Run([cmd_string])
+        if net.ipv4:
+            ipv6_offset = node.ipv6_offset
+            new_net.AddIpv6Network(net.ipv6.ipv6())
+            new_net.ipv6.__iadd__(ipv6_offset + 1)
+            cmd_string = "setvr %s ip -6 addr add %s/%s dev %s.%s" % (new_net.vr, 
+                new_net.ipv6.ip, new_net.ipv6.prefixlen, self.name, new_net.vlan)
+            r = conn.Run([cmd_string])
 
     def PingCheck(self, node, remote_intf):
-        status = True
         conn = node.conn
         for net in remote_intf.networks:
             cmd_string = "ping -c 2 -w 1 %s" % net.ipv4.ip
@@ -349,9 +355,9 @@ class LinuxInterface(Interface):
                 if res_obj:
                     loss = int(res_obj.group(2))
                     logger.debug("packet loss %s", loss)
-                    if loss < 100:
-                        status = False
-        return status
+                    if loss == 100:
+                        return True
+        return False
 
 
 class SwitchInterface(Interface):
@@ -361,7 +367,7 @@ class SwitchInterface(Interface):
 
     def AddLink(self, node, net):
         conn = node.conn
-        # check if vlan exists
+        # check if vlan exists, create otherwise
         cmd_string = "show vlan id %s" % net.vlan
         r = conn.Run([cmd_string])
         for line in r.splitlines():
@@ -373,12 +379,52 @@ class SwitchInterface(Interface):
                 r = conn.Run([cmd_string])
                 cmd_string = "exit"
                 r = conn.Run([cmd_string])
+        # create the port channel, if not there
+        if net.port_channel:
+            found = False
+            cmd_string = "show port-channel summary"
+            r = conn.Run([cmd_string])
+            for line in r.splitlines():
+                res_obj = re.search(r'([\d]+).*Po([\d]+)', line)
+                if res_obj:
+                    po = res_obj.group(1)
+                    if po == net.port_channel:
+                        logging.debug("Found port channel %s" % po)
+                        found = True
+            cmd_string = "configure terminal"
+            r = conn.Run([cmd_string])
+            cmd_string = "feature lacp"
+            r = conn.Run([cmd_string])
+            cmd_string = "interface port-channel %s" % net.port_channel
+            r = conn.Run([cmd_string])
+            if not found:
+                cmd_string = "switchport mode trunk"
+                r = conn.Run([cmd_string])
+                cmd_string = "show interface port-channel %s switchport | grep \"Trunking VLANs Allowed\"" % net.port_channel
+                r = conn.Run([cmd_string])
+                for line in r.splitlines():
+                    res_obj = re.search(r'Trunking VLANs Allowed: 1-4094', line)
+                    if res_obj:
+                        cmd_string = "switchport trunk allowed vlan none"
+                        r = conn.Run([cmd_string])
+            cmd_string = "end"
+            r = conn.Run([cmd_string])
+        # configure the interface
         cmd_string = "configure terminal"
         r = conn.Run([cmd_string])
         cmd_string = "interface ethernet %s" % self.name
         r = conn.Run([cmd_string])
-        cmd_string = "switchport mode trunk"
+        # if not trunk, enable it
+        cmd_string = "show interface ethernet %s switchport | grep \"Operational Mode\"" % self.name
         r = conn.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'Operational Mode: ([\w]+)', line)
+            if res_obj:
+                mode = res_obj.group(1)
+                if not (mode == "trunk"):
+                    logger.debug("mode is not trunk: %s" % mode)
+                    cmd_string = "switchport mode trunk"
+                    r = conn.Run([cmd_string])
         cmd_string = "show interface ethernet %s switchport | grep \"Trunking VLANs Allowed\"" % self.name
         r = conn.Run([cmd_string])
         for line in r.splitlines():
@@ -386,21 +432,24 @@ class SwitchInterface(Interface):
             if res_obj:
                 cmd_string = "switchport trunk allowed vlan none"
                 r = conn.Run([cmd_string])
+        # Add the vlans
+        if net.port_channel:
+            cmd_string = "channel-group %s force mode active" % net.port_channel
+            r = conn.Run([cmd_string])
+            cmd_string = "interface port-channel %s" % net.port_channel
+            r = conn.Run([cmd_string])
         cmd_string = "switchport trunk allowed vlan add %s" % net.vlan
         r = conn.Run([cmd_string])
         cmd_string = "end"
         r = conn.Run([cmd_string])
 
     def AddConnectivity(self, node, net):
+        if not net.ipv4 and not net.ipv6:
+            logger.debug("IP network not specified")
+            return 
         conn = node.conn
-        ipv4_offset = node.ipv4_offset
-        ipv6_offset = node.ipv6_offset
         new_net = Network()
         self.networks.append(new_net)
-        new_net.AddIpv4Network(net.ipv4.ipv4())
-        new_net.AddIpv6Network(net.ipv6.ipv6())
-        new_net.ipv4.value += (ipv4_offset + 1)
-        new_net.ipv6.__iadd__(ipv6_offset + 1)
         new_net.vlan = net.vlan
         new_net.vr = net.vr
         cmd_string = "configure terminal"
@@ -417,17 +466,27 @@ class SwitchInterface(Interface):
         r = conn.Run([cmd_string])
         cmd_string = "vrf member %s" % new_net.vr 
         r = conn.Run([cmd_string])
-        cmd_string = "ip address %s/%s" % (new_net.ipv4.ip, new_net.ipv4.prefixlen)
-        r = conn.Run([cmd_string])
-        cmd_string = "ipv6 address %s/%s" % (new_net.ipv6.ip, new_net.ipv6.prefixlen)
-        r = conn.Run([cmd_string])
+        if net.ipv4:
+            ipv4_offset = node.ipv4_offset
+            new_net.AddIpv4Network(net.ipv4.ipv4())
+            new_net.ipv4.value += (ipv4_offset + 1)
+            cmd_string = "ip address %s/%s" % (new_net.ipv4.ip, new_net.ipv4.prefixlen)
+            r = conn.Run([cmd_string])
+        if net.ipv6:
+            ipv6_offset = node.ipv6_offset
+            new_net.AddIpv6Network(net.ipv6.ipv6())
+            new_net.ipv6.__iadd__(ipv6_offset + 1)
+            cmd_string = "ipv6 address %s/%s" % (new_net.ipv6.ip, new_net.ipv6.prefixlen)
+            r = conn.Run([cmd_string])
         cmd_string = "end"
         r = conn.Run([cmd_string])
 
     def PingCheck(self, node, remote_intf):
         conn = node.conn
         for net in remote_intf.networks:
-            status = True
+            if not net.ipv4:
+                logger.debug("No Ip network")
+                return False
             cmd_string = "ping %s count 2 timeout 1 vrf %s" % (net.ipv4.ip, net.vr)
             r = conn.Run([cmd_string])
             for line in r.splitlines():
@@ -435,9 +494,9 @@ class SwitchInterface(Interface):
                 if res_obj:
                     loss = float(res_obj.group(2))
                     logger.debug("packet loss %s", loss)
-                    if loss < 100:
-                        status = False
-        return status
+                    if loss == 100:
+                        return True
+        return False
 
 
 class StarOsInterface(Interface):
@@ -446,6 +505,9 @@ class StarOsInterface(Interface):
         super(StarOsInterface, self).__init__(name, bandwidth)
 
     def AddLink(self, node, net):
+        if net.port_channel and not (net.ipv4 or net.ipv6):
+            logger.debug("secondary member of a port channel")
+            return
         # check if links exists, fail otherwise
         link_exists =  False       
         conn = node.conn
@@ -456,9 +518,28 @@ class StarOsInterface(Interface):
         for line in r.splitlines():
             res_obj = re.search(r'IP State:.*UP', line)
             if res_obj:
+                logger.debug("Interface %s found, status is UP" % self.name)
+                link_exists =  True
+        if node.make.model == "ASR5500":
+            card, port = self.name.split("/")
+            if card == "5":
+                new_intf = "6/" + port
+            elif card == "6":
+                new_intf = "5/" + port
+            else:
+                logger.error("Unexpected interface" % self.name)
+                assert False
+        cmd_string = "show ip interface | grep \"Bound to %s\"" % new_intf
+        r = conn.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'IP State:.*UP', line)
+            if res_obj:
+                logger.debug("Interface %s found, status is UP" % new_intf)
                 link_exists =  True
         # verify
-        assert link_exists
+        if not link_exists:
+            logger.error("Interface %s not found, or status is DOWN" % self.name)
+            raise
  
     def AddConnectivity(self, node, net):
         # check if network exists, fail otherwise
@@ -470,7 +551,9 @@ class StarOsInterface(Interface):
     def PingCheck(self, node, remote_intf):
         conn = node.conn
         for net in remote_intf.networks:
-            status = True
+            if not net.ipv4:
+                logger.debug("No Ip network")
+                return False
             cmd_string = "context %s" % net.vr
             r = conn.Run([cmd_string])
             cmd_string = "ping %s count 2" % net.ipv4.ip
@@ -480,9 +563,9 @@ class StarOsInterface(Interface):
                 if res_obj:
                     loss = int(res_obj.group(2))
                     logger.debug("packet loss %s", loss)
-                    if loss < 100:
-                        status = False
-        return status
+                    if loss == 100:
+                        return True
+        return False
  
 
 class Network(object):
@@ -501,7 +584,9 @@ class Network(object):
         self.ipv6 = netaddr.IPNetwork(net)
 
     def Display(self):
-        logger.debug("IPv4 - Network: %s, Broadcast: %s, Size %s" % (
-            self.ipv4.network, self.ipv4.broadcast, self.ipv4.size))
-        logger.debug("IPv6 - Network: %s, Broadcast: %s, Prefix Length: %s" % (
-            self.ipv6.network, self.ipv6.broadcast, self.ipv6.prefixlen))
+        if self.ipv4:
+            logger.debug("IPv4 - Network: %s, Broadcast: %s, Size %s" % (
+                self.ipv4.network, self.ipv4.broadcast, self.ipv4.size))
+        if self.ipv6:
+            logger.debug("IPv6 - Network: %s, Broadcast: %s, Prefix Length: %s" % (
+                self.ipv6.network, self.ipv6.broadcast, self.ipv6.prefixlen))

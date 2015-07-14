@@ -10,12 +10,24 @@
         <make name="Cisco" model="Nexus" type="5548"/>
     </device>
     <link bandwidth="10G" node_a="evo1" interface_a="5/10" node_b="evo-sw1" interface_b="1/1">
-        <connectivity vlan="1513" ipv4="172.17.0.0/24" ipv6="fd00:0001:0000::/64" vr="pgw-1"/>
-        <connectivity vlan="1769" ipv4="172.19.0.0/24" ipv6="fd00:0003:0000::/64" vr="ip-1"/>
+        <connectivity vlan="1513" ipv4="172.17.0.0/24" ipv6="fd00:0001:0000::/64" vr="pgw-1" port_channel="1"/>
+        <connectivity vlan="1514" ipv4="172.17.1.0/24" ipv6="fd00:0001:0001::/64" vr="pgw-1" port_channel="1"/>
+        <connectivity vlan="1769" ipv4="172.19.0.0/24" ipv6="fd00:0003:0000::/64" vr="ip-1" port_channel="1"/>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/11" node_b="evo-sw1" interface_b="1/2">
+        <connectivity vlan="1513" vr="pgw-1" port_channel="1"/>
+        <connectivity vlan="1514" vr="pgw-1" port_channel="1"/>
+        <connectivity vlan="1769" vr="ip-1" port_channel="1"/>
     </link>
     <link bandwidth="10G" node_a="evo1" interface_a="6/10" node_b="evo-sw1" interface_b="1/3">
-        <connectivity vlan="1513" vr="pgw-1"/>
-        <connectivity vlan="1769" vr="ip-1"/>
+        <connectivity vlan="1513" vr="pgw-1" port_channel="1"/>
+        <connectivity vlan="1514" vr="pgw-1" port_channel="1"/>
+        <connectivity vlan="1769" vr="ip-1" port_channel="1"/>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/11" node_b="evo-sw1" interface_b="1/4">
+        <connectivity vlan="1513" vr="pgw-1" port_channel="1"/>
+        <connectivity vlan="1514" vr="pgw-1" port_channel="1"/>
+        <connectivity vlan="1769" vr="ip-1" port_channel="1"/>
     </link>
     <link bandwidth="10G" node_a="evo-sw1" interface_a="1/5" node_b="luto1" interface_b="eth2">
         <connectivity vlan="1001" ipv4="172.18.0.0/24" ipv6="fd00:0002:0000::/64" vr="1"/>
