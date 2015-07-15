@@ -70,21 +70,27 @@ class Connect(object):
                 if self.options.has_key("verbose"):
                     logger.info("PASSWORD: %s" % (self.connection_id.after))
             elif self.child == 5: # In
+                # see below, this case is not called
                 if self.options.has_key("verbose"):
                     logger.info("PROMPT: %s" % (self.connection_id.before))
-                logger.debug("%s" % (self.connection_id.match.group()))
+                #logger.debug("%s" % (self.connection_id.match.group()))
                 retVal = self.connection_id.match.group()
                 break
             elif self.child == 6: # In
-                logger.debug("%s" % (self.connection_id.before))
+                for line in self.connection_id.before.splitlines():
+                    logger.debug("%s" % line)
+                logger.debug("generic prompt: %s" % (self.connection_id.match.group()))
                 if self.options.has_key("verbose"):
                     logger.info("GENERIC PROMPT: %s" % (self.connection_id.match.group()))
-                # causes an issue with $, comment for now
+                # causes an issue with $, comment for now, step 5 never called
                 #self.prompt = self.connection_id.match.group()
                 if self.options.has_key("verbose"):
                     logger.info("GENERIC PROMPT: %s" % (self.connection_id.after))
+                # everything up to the prompt
                 retVal = self.connection_id.before
+                # prompt
                 #retVal = self.connection_id.match.group()
+                # whatever follows
                 #retVal = self.connection_id.after
                 break
             else:

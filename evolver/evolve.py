@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import netaddr
 import re
+import time
 from connect import *
 from evolve_log import *
 
@@ -86,6 +87,7 @@ class Parser(object):
         self.xml_file = xml_file
 
     def __AddHosts(self, system, tag):
+        # verify these 3 tags are present
         name = tag.attrib['name']
         domain = tag.attrib['domain']
         type = tag.attrib['type']
@@ -148,7 +150,6 @@ class Parser(object):
         assert root_tag.tag == "system"
         name = root_tag.attrib['name']
         sys = System(name)
-        #Logger("extensive", "/tmp/evolve.log")
 
         for next_tag in root_tag:
             if next_tag.tag == "device":
@@ -222,7 +223,7 @@ class Link(object):
         remote_intf = self.interfaces[1]
         if intf.PingCheck(node, remote_intf):
             logger.error("Ping check failed")
-            assert False
+            raise
  
     def Display(self):
         logger.debug("Link %s" % self.name)
@@ -242,13 +243,16 @@ class Interface(object):
         self.networks = [ ]
 
     def AddLink(self, node, net):
-        logger.warning("bypass")
+        logger.error("Method not implemented")
+        raise
 
     def AddConnectivity(self, node, net):
-        logger.warning("bypass")
+        logger.error("Method not implemented")
+        raise
 
     def PingCheck(self, node, remote_intf):
-        logger.warning("bypass")
+        logger.error("Method not implemented")
+        raise
 
 
 class LinuxInterface(Interface):
@@ -260,7 +264,7 @@ class LinuxInterface(Interface):
         if self.bandwidth == "10G":
             cmd_string = "ip link set dev %s qlen 10000 up" % self.name
         else:
-            cmd_string = "ip link set dev %s" % self.name
+            cmd_string = "ip link set dev %s up" % self.name
         r = conn.Run([cmd_string])
         # validate, check errors
 
@@ -277,6 +281,7 @@ class LinuxInterface(Interface):
                 # Validation needed
 
     def TvParse(self, input, top, bottom, tags):
+        # create a Parser object that can be called
         state = "STARTED"
         results = { }
         for line in input.splitlines():
@@ -354,10 +359,22 @@ class LinuxInterface(Interface):
                 res_obj = re.search(r'[\d]+ packets transmitted, [\d]+ received,( [\d+]+ errors ,)? ([\d.]+)\% packet loss, (time [\d\w]+)?', line)
                 if res_obj:
                     loss = int(res_obj.group(2))
-                    logger.debug("packet loss %s", loss)
+                    logger.debug("Packet loss %s", loss)
                     if loss == 100:
                         return True
         return False
+
+    def VerifyLink(self, node, net):
+        conn = node.conn
+        cmd_string = "setvr %s ip link show dev %s.%s" % (net.vr, self.name, net.vlan)
+        r = conn.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'Device (.*) does not exist.', line)
+            if res_obj:
+                device = res_obj.group(1)
+                logger.warning("Device %s doesn't exist" % device)
+                return False
+        return True
 
 
 class SwitchInterface(Interface):
@@ -368,11 +385,13 @@ class SwitchInterface(Interface):
     def AddLink(self, node, net):
         conn = node.conn
         # check if vlan exists, create otherwise
+        logger.debug("Looking for vlan %s ..." % net.vlan)
         cmd_string = "show vlan id %s" % net.vlan
         r = conn.Run([cmd_string])
         for line in r.splitlines():
             res_obj = re.search(r'VLAN ([\d]+) not found in current VLAN database', line)
             if res_obj:
+                logger.debug("Vlan %s not found" % net.vlan)
                 cmd_string = "configure terminal"
                 r = conn.Run([cmd_string])
                 cmd_string = "vlan %s" % net.vlan
@@ -382,6 +401,7 @@ class SwitchInterface(Interface):
         # create the port channel, if not there
         if net.port_channel:
             found = False
+            logger.debug("Looking for port-channel %s ..." % net.port_channel)
             cmd_string = "show port-channel summary"
             r = conn.Run([cmd_string])
             for line in r.splitlines():
@@ -389,7 +409,7 @@ class SwitchInterface(Interface):
                 if res_obj:
                     po = res_obj.group(1)
                     if po == net.port_channel:
-                        logging.debug("Found port channel %s" % po)
+                        logger.debug("Found port channel %s" % po)
                         found = True
             cmd_string = "configure terminal"
             r = conn.Run([cmd_string])
@@ -398,13 +418,16 @@ class SwitchInterface(Interface):
             cmd_string = "interface port-channel %s" % net.port_channel
             r = conn.Run([cmd_string])
             if not found:
+                logger.debug("Port channel %s not found" % net.port_channel)
                 cmd_string = "switchport mode trunk"
                 r = conn.Run([cmd_string])
+                logger.debug("Looking if all vlans 1-4094 are allowed ...")
                 cmd_string = "show interface port-channel %s switchport | grep \"Trunking VLANs Allowed\"" % net.port_channel
                 r = conn.Run([cmd_string])
                 for line in r.splitlines():
                     res_obj = re.search(r'Trunking VLANs Allowed: 1-4094', line)
                     if res_obj:
+                        logger.debug("All vlans 1-4094 are allowed, changing to none")
                         cmd_string = "switchport trunk allowed vlan none"
                         r = conn.Run([cmd_string])
             cmd_string = "end"
@@ -415,6 +438,7 @@ class SwitchInterface(Interface):
         cmd_string = "interface ethernet %s" % self.name
         r = conn.Run([cmd_string])
         # if not trunk, enable it
+        logger.debug("Looking if mode is trunk ...")
         cmd_string = "show interface ethernet %s switchport | grep \"Operational Mode\"" % self.name
         r = conn.Run([cmd_string])
         for line in r.splitlines():
@@ -422,14 +446,16 @@ class SwitchInterface(Interface):
             if res_obj:
                 mode = res_obj.group(1)
                 if not (mode == "trunk"):
-                    logger.debug("mode is not trunk: %s" % mode)
+                    logger.debug("Mode is not trunk: %s, changing to trunk" % mode)
                     cmd_string = "switchport mode trunk"
                     r = conn.Run([cmd_string])
+        logger.debug("Looking if all vlans 1-4094 are allowed ...")
         cmd_string = "show interface ethernet %s switchport | grep \"Trunking VLANs Allowed\"" % self.name
         r = conn.Run([cmd_string])
         for line in r.splitlines():
             res_obj = re.search(r'Trunking VLANs Allowed: 1-4094', line)
             if res_obj:
+                logger.debug("All vlans 1-4094 are allowed, changing to none")
                 cmd_string = "switchport trunk allowed vlan none"
                 r = conn.Run([cmd_string])
         # Add the vlans
@@ -487,15 +513,35 @@ class SwitchInterface(Interface):
             if not net.ipv4:
                 logger.debug("No Ip network")
                 return False
+            if not self.RouteCheck(node, net):
+                logger.debug("Route check failed")
+                return False
             cmd_string = "ping %s count 2 timeout 1 vrf %s" % (net.ipv4.ip, net.vr)
             r = conn.Run([cmd_string])
             for line in r.splitlines():
                 res_obj = re.search(r'[\d]+ packets transmitted, [\d]+ packets received,( [\d+]+ errors ,)? ([\d.]+)\% packet loss', line)
                 if res_obj:
                     loss = float(res_obj.group(2))
-                    logger.debug("packet loss %s", loss)
+                    logger.debug("Packet loss %s", loss)
                     if loss == 100:
                         return True
+        return False
+
+    def RouteCheck(self, node, net):
+        attempts = 3
+        conn = node.conn
+        for i in range(attempts):
+            cmd_string = "show ip route vrf %s" % net.vr
+            r = conn.Run([cmd_string])
+            for line in r.splitlines():
+                res_obj = re.search(r'([\d./]+), ubest/mbest', line)
+                if res_obj:
+                    entry = res_obj.group(1)
+                    if entry == net.ipv4.network:  
+                        logger.debug("Found entry for %s" % entry)
+                        return True
+            time.sleep(3)
+        logger.debug("Did not find any entry")
         return False
 
 
@@ -506,7 +552,7 @@ class StarOsInterface(Interface):
 
     def AddLink(self, node, net):
         if net.port_channel and not (net.ipv4 or net.ipv6):
-            logger.debug("secondary member of a port channel")
+            logger.debug("Secondary member of a port channel")
             return
         # check if links exists, fail otherwise
         link_exists =  False       
@@ -562,7 +608,7 @@ class StarOsInterface(Interface):
                 res_obj = re.search(r'[\d]+ packets transmitted, [\d]+ received,( [\d+]+ errors ,)? ([\d.]+)\% packet loss, (time [\d\w]+)?', line)
                 if res_obj:
                     loss = int(res_obj.group(2))
-                    logger.debug("packet loss %s", loss)
+                    logger.debug("Packet loss %s", loss)
                     if loss == 100:
                         return True
         return False
