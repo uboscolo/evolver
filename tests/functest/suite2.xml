@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <system name="new system">
-    <device name="luto1" domain="mitg-tew01.cisco.com" type="debian">
+    <device name="luto1" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
     <device name="evo1" domain="mitg-tew01.cisco.com" type="staros">
         <make name="Cisco" model="ASR5500" type="MIO-DPC"/>
     </device>
-    <device name="evo-sw1" domain="mitg-tew01.cisco.com" type="switch">
+    <device name="evo-sw1" domain="mitg-tew01.cisco.com" type="switch" configure="yes">
         <make name="Cisco" model="Nexus" type="5596"/>
     </device>
     <link bandwidth="10G" node_a="evo1" interface_a="5/10" node_b="evo-sw1" interface_b="1/1">
@@ -72,13 +72,33 @@
             <network ipv4_a="172.18.129.129/24" ipv6_a="fd00:0002:0081::81/64" vr_a="s5-1" ipv4_b="172.18.129.1/24" ipv6_b="fd00:0002:0081::1/64" vr_b="3"/>
         </connectivity>
         <connectivity vlan="1193">
-            <network ipv4_a="172.18.193.129/24" ipv6_a="fd00:0002:0041::c1/64" vr_a="s5-1" ipv4_b="172.18.193.1/24" ipv6_b="fd00:0002:00c1::1/64" vr_b="4"/>
+            <network ipv4_a="172.18.193.129/24" ipv6_a="fd00:0002:00c1::c1/64" vr_a="s5-1" ipv4_b="172.18.193.1/24" ipv6_b="fd00:0002:00c1::1/64" vr_b="4"/>
         </connectivity>
         <connectivity vlan="2129">
             <network ipv4_a="172.20.129.129/24" ipv6_a="fd00:0004:0081::81/64" vr_a="sgi-1" ipv4_b="172.20.129.1/24" ipv6_b="fd00:0004:0081::1/64" vr_b="23"/>
         </connectivity>
         <connectivity vlan="2193">
-            <network ipv4_a="172.20.193.129/24" ipv6_a="fd00:0004:0041::c1/64" vr_a="sgi-1" ipv4_b="172.20.193.1/24" ipv6_b="fd00:0004:00c1::1/64" vr_b="24"/>
+            <network ipv4_a="172.20.193.129/24" ipv6_a="fd00:0004:00c1::c1/64" vr_a="sgi-1" ipv4_b="172.20.193.1/24" ipv6_b="fd00:0004:00c1::1/64" vr_b="24"/>
         </connectivity>
     </link>
+    <route type="static" node_from="luto1" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.30.1.129/32" vr_from="1" v4_addr_to="172.30.0.1/32" vr_to="pgw-1" v4_addr_via="172.18.1.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0001::81/128" vr_from="1" v6_addr_to="fd00:0014:0000::1/128" vr_to="pgw-1" v6_addr_via="fd00:0002:0001::81/64" vr_via="s5-1"/>
+    </route>
+    <route type="static" node_from="evo1" node_to="luto1" node_via="evo-sw1">
+        <network v4_addr_from="172.30.0.1/32" vr_from="pgw-1" v4_addr_to="172.30.1.129/32" vr_to="1" v4_addr_via="172.17.0.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0000::1/128" vr_from="pgw-1" v6_addr_to="fd00:0014:0001::81/128" vr_to="1" v6_addr_via="fd00:0001:0000::81/64" vr_via="s5-1"/>
+    </route>
+    <route type="static" node_from="evo1" node_to="evo-sw1" node_via="evo-sw1">
+        <network v4_addr_from="1.0.0.1/32" vr_from="ip-1" v4_addr_to="1.0.0.129/32" vr_to="sgi-1" v4_addr_via="172.19.0.129/24" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="evo-sw1" node_to="evo1" node_via="evo1">
+        <network v4_addr_from="1.0.0.129/32" vr_from="sgi-1" v4_addr_to="1.0.0.1/32" vr_to="ip-1" v4_addr_via="172.19.0.1/24" vr_via="ip-1"/>
+    </route>
+    <route type="bgp" node_from="evo1" node_to="luto1">
+        <network v4_addr_from="1.0.0.1/32" vr_from="ip-1" v4_addr_to="172.20.1.1/24" vr_to="21"/>
+    </route>
+    <route type="static" node_from="luto1" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.20.1.1/24" vr_from="21" v4_addr_to="1.0.0.1/32" vr_to="ip-1" v4_addr_via="172.20.1.129/24" vr_via="sgi-1"/>
+    </route>
 </system>

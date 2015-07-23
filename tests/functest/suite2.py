@@ -24,6 +24,7 @@ def test_1():
         sys = p.ParseXml()
         sys.Display()
         sys.CheckConnectivity()
+        sys.CheckRouting()
     except IOError:
         print "Could not open file"
         raise

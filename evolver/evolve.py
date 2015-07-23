@@ -17,10 +17,20 @@ class Host(object):
         self.username = None
         self.password = None
         self.make = None
+        self.loopbacks = [ ]
         self.interfaces = [ ]
         self.interfaces_by_name = { }
+        self.verify_only = True
 
     def AddInterface(self, name, bandwidth):
+        logger.error("Method not implemented")
+        assert False
+
+    def AddLoopback(self, addr, vr):
+        logger.error("Method not implemented")
+        assert False
+
+    def AddRoute(self, net_from, net_to, net_via, ver=4):
         logger.error("Method not implemented")
         assert False
 
@@ -30,11 +40,11 @@ class Host(object):
         if self.conn.Open():
             logger.info("Connected to %s Opened" % self.hostname)
 
-    def PingCheck(self, local_net, remote_net):
+    def PingCheck(self, local_net, remote_net, ver=4):
         logger.error("Method not implemented")
         assert False
 
-    def RouteCheck(self, local_net, remote_net):
+    def RouteCheck(self, local_net, remote_net, ver=4):
         logger.error("Method not implemented")
         assert False
 
@@ -46,27 +56,105 @@ class DebianHost(Host):
         self.username = "root"
         self.password = "starent"
 
+    def AddLoopback(self, addr, vr):
+        logger.debug("Adding loopback interface")
+        ip = netaddr.IPNetwork(addr)
+        if ip.version == "4" and  not ip.prefixlen == "32":
+            logger.error("Not a loopback address %s" % ip)
+            assert False
+        if ip.version == "6" and  not ip.prefixlen == "128":
+            logger.error("Not a loopback address %s" % ip)
+            assert False
+        lb = Loopback()
+        lb.vr = vr
+        lb.addr = ip
+        self.loopbacks.append(lb)
+        # check if loopback exists
+        found = False
+        c = self.conn
+        cmd_string = "setvr %s ip addr show | grep %s" % (vr, ip)
+        r = c.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'[\s]+inet6? ([A-Fa-f\d.:/]+)', line)
+            if res_obj:
+                res = netaddr.IPNetwork(res_obj.group(1))
+                logger.debug("Loopback target: %s", res)
+                if res == ip:
+                    logger.debug("Loopback found: %s", res)
+                    found = True
+        if not found and not self.verify_only:
+            cmd_string = "setvr %s ip addr add %s dev lo" % (vr, ip)
+            r = c.Run([cmd_string])
+        
     def AddInterface(self, name, bandwidth):
         new_intf = LinuxInterface(name, bandwidth)
         self.interfaces.append(new_intf)
         self.interfaces_by_name[name] = new_intf
         new_intf.Bringup(self.conn)
         new_intf.RingSize(self.conn)
+        if not self.verify_only:
+            new_intf.verify_only = False
 
-    def PingCheck(self, local_net, remote_net):
+    def AddRoute(self, net_from, net_to, net_via, ver=4):
+        c = self.conn
+        # check route
+        if ver == 4:
+            cmd_string = "setvr %s ip route show | grep %s" % (net_from.vr, net_to.ipv4.ip)
+            route_string = "setvr %s ip route add %s via %s" % (net_from.vr, net_to.ipv4.ip, net_via.ipv4.ip)
+            to_target = net_to.ipv4.ip
+            via_target = net_via.ipv4.ip
+        elif ver == 6:
+            cmd_string = "setvr %s ip -6 route show | grep %s" % (net_from.vr, net_to.ipv6.ip)
+            route_string = "setvr %s ip -6 route add %s via %s" % (net_from.vr, net_to.ipv6.ip, net_via.ipv6.ip)
+            to_target = net_to.ipv6.ip
+            via_target = net_via.ipv6.ip
+        else:
+            logger.error("Unexpected ip version %s" % ver)
+            assert False
+        found = False
+        r = c.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'([A-Fa-f\d.:]+) via ([A-Fa-f\d.:]+)', line)
+            if res_obj:
+                to = netaddr.IPNetwork(res_obj.group(1)).ip
+                via = netaddr.IPNetwork(res_obj.group(2)).ip
+                if to == to_target and via == via_target:
+                    logger.debug("Route to %s via %s found" % (to, via))
+                    found = True
+        # create route
+        if not found:
+            if self.verify_only:
+                logger.error("Route not found, can't proceed")
+                assert False
+            r = c.Run([route_string])
+
+    def PingCheck(self, local_net, remote_net, ver=4):
         logger.debug("Verifying pingability")
         c = self.conn
-        cmd_string = "setvr %s ping -c 2 -w 1 %s" % (local_net.vr, remote_net.ipv4.ip)
+        retval = True
+        if ver == 4:
+            if not remote_net.ipv4:
+                logger.debug("No ipv4 network")
+                return False
+            cmd_string = "setvr %s ping -c 2 -w 1 -i 0.5 %s -I %s" % (local_net.vr, remote_net.ipv4.ip, local_net.ipv4.ip)
+        elif ver == 6:
+            if not remote_net.ipv6:
+                logger.debug("No ipv6 network")
+                return False
+            cmd_string = "setvr %s ping6 -c 2 -w 1 %s -i 0.5 -I %s" % (local_net.vr, remote_net.ipv6.ip, local_net.ipv6.ip)
+        else:
+            logger.error("Unexpected ip version %s" % ver)
+            assert False
         r = c.Run([cmd_string])
         for line in r.splitlines():
             res_obj = re.search(r'[\d]+ packets transmitted, [\d]+ received,( [\d+]+ errors ,)? ([\d.]+)\% packet loss, (time [\d\w]+)?', line)
             if res_obj:
                 loss = int(res_obj.group(2))
-                if loss == 100:
-                    logger.debug("Packet loss is too high: %s", loss)
-                    return True
-        logger.debug("Packet loss within acceptable limits")
-        return False
+                if loss < 100:
+                    logger.debug("Packet loss is within tolerance: %s", loss)
+                    retval = False
+                    break
+        return retval
 
 
 class StarOsHost(Host):
@@ -84,24 +172,71 @@ class StarOsHost(Host):
         new_intf = StarOsInterface(name, bandwidth)
         self.interfaces.append(new_intf)
         self.interfaces_by_name[name] = new_intf
+        if not self.verify_only:
+            new_intf.verify_only = False
 
-    def PingCheck(self, local_net, remote_net):
+    def AddLoopback(self, addr, vr):
+        logger.debug("Checking for loopback")
+
+    def AddRoute(self, net_from, net_to, net_via, ver=4):
+        # check route
         c = self.conn
-        if not remote_net.ipv4:
-            logger.debug("No Ip network")
-            return False
+        cmd_string = "context %s" % net_from.vr
+        r = c.Run([cmd_string])
+        if ver == 4:
+            cmd_string = "show ip route | grep %s" % net_to.ipv4.ip
+            to_target = net_to.ipv4
+            via_target = net_via.ipv4.ip
+        elif ver == 6:
+            cmd_string = "show ipv6 route | grep %s" % net_to.ipv4.ipv6
+            to_target = net_to.ipv6.ip
+            via_target = net_via.ipv6.ip
+        else:
+            logger.error("Unexpected ip version %s" % ver)
+            assert False
+        found = False
+        r = c.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'\*([A-Fa-f\d.:/]+)[\s]+([A-Fa-f\d.:]+)', line)
+            if res_obj:
+                to = netaddr.IPNetwork(res_obj.group(1))
+                via = netaddr.IPNetwork(res_obj.group(2)).ip
+                if to == to_target and via == via_target:
+                    logger.debug("Route to %s via %s found" % (to, via))
+                    found = True
+        # create route
+        if not found:
+            assert False
+
+    def PingCheck(self, local_net, remote_net, ver=4):
+        logger.debug("Verifying pingability")
+        c = self.conn
+        if ver == 4:
+            if not remote_net.ipv4:
+                logger.debug("No Ipv4 network")
+                return False
+            ping_string = "ping %s count 2 src %s" % (remote_net.ipv4.ip, local_net.ipv4.ip)
+        elif ver == 6:
+            if not remote_net.ipv6:
+                logger.debug("No Ipv6 network")
+                return False
+            ping_string = "ping6 %s count 2 src %s" % (remote_net.ipv6.ip, local_net.ipv6.ip)
+        else:
+            logger.error("Unexpected ip version %s" % ver)
+            assert False
         cmd_string = "context %s" % local_net.vr
         r = c.Run([cmd_string])
-        cmd_string = "ping %s count 2" % remote_net.ipv4.ip
-        r = c.Run([cmd_string])
+        retval = True
+        r = c.Run([ping_string])
         for line in r.splitlines():
             res_obj = re.search(r'[\d]+ packets transmitted, [\d]+ received,( [\d+]+ errors ,)? ([\d.]+)\% packet loss, (time [\d\w]+)?', line)
             if res_obj:
                 loss = int(res_obj.group(2))
-                logger.debug("Packet loss %s", loss)
-                if loss == 100:
-                    return True
-        return False
+                if loss < 100:
+                    logger.debug("Packet loss is within tolerance: %s", loss)
+                    retval = False
+                    break
+        return retval
 
 
 class Switch(Host):
@@ -115,41 +250,148 @@ class Switch(Host):
         new_intf = SwitchInterface(name, bandwidth)
         self.interfaces.append(new_intf)
         self.interfaces_by_name[name] = new_intf
+        if not self.verify_only:
+            new_intf.verify_only = False
+
+    def AddLoopback(self, addr, vr):
+        logger.debug("checking for loopback ...")
+        ip = netaddr.IPNetwork(addr)
+        if ip.version == "4" and  not ip.prefixlen == "32":
+            logger.error("Not a loopback address %s" % ip)
+            assert False
+        if ip.version == "6" and  not ip.prefixlen == "128":
+            logger.error("Not a loopback address %s" % ip)
+            assert False
+        lb = Loopback()
+        lb.vr = vr
+        lb.addr = ip
+        self.loopbacks.append(lb)
+        # check if loopback exists
+        found = False
+        c = self.conn
+        cmd_string = "show interface | grep %s" % ip
+        r = c.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'  Internet Address is ([A-Fa-f\d.:/]+)', line)
+            if res_obj:
+                res = netaddr.IPNetwork(res_obj.group(1))
+                if res == ip:
+                    logger.debug("Loopback found: %s", res)
+                    found = True
+        if not found and not self.verify_only:
+            # assign mumber to interface
+            unavail_num = [ ]
+            if_num = None
+            cmd_string = "show interface brief | grep Lo"
+            r = c.Run([cmd_string])
+            for line in r.splitlines():
+                res_obj = re.search(r'Lo([\d]+)', line)
+                if res_obj:
+                    num = int(res_obj.group(1))
+                    unavail_num.append(num) 
+            for i in range(1, 1024):
+                if not i in unavail_num:
+                    logger.debug("Next available loopback is %s" % i)
+                    if_num = i
+                    break
+            if not if_num:
+                logger.error("Ran out of loopback interfaces (%s)" % i)
+                assert False
+            cmd_string = "configure terminal"
+            r = c.Run([cmd_string])
+            cmd_string = "interface loopback %s" % if_num
+            r = c.Run([cmd_string])
+            cmd_string = "vrf member %s" % vr
+            r = c.Run([cmd_string])
+            cmd_string = "ip address %s" % ip
+            r = c.Run([cmd_string])
+            cmd_string = "end"
+            r = c.Run([cmd_string])
+
+    def AddRoute(self, net_from, net_to, net_via, ver=4):
+        # check route
+        c = self.conn
+        if ver == 4:
+            cmd_string = "show ip route vrf %s | grep -A 1 %s" % (net_from.vr, net_to.ipv4)
+            to_target = net_to.ipv4
+            via_target = net_via.ipv4.ip
+        elif ver == 6:
+            cmd_string = "show ipv6 route vrf %s | grep -A 1 %s" % (net_from.vr, net_to.ipv6)
+            to_target = net_to.ipv6
+            via_target = net_via.ipv6.ip
+        else:
+            logger.error("Unexpected ip version %s" % ver)
+            assert False
+        found = False
+        to = None
+        via = None
+        r = c.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj1 = re.search(r'([A-Fa-f\d.:/]+), ubest/mbest', line)
+            res_obj2 = re.search(r'[\s]+\*via ([A-Fa-f\d.:]+),', line)
+            if res_obj1:
+                to = netaddr.IPNetwork(res_obj1.group(1))
+            if res_obj2:
+                via = netaddr.IPNetwork(res_obj2.group(1)).ip
+            if to == to_target and via == via_target:
+                logger.debug("Route to %s via %s found" % (to, via))
+                found = True
+        # create route
+        if not found:
+            assert False
 
     def Connect(self):
         super(Switch, self).Connect()
         cmd_string = "terminal length 0"
         r = self.conn.Run([cmd_string])
 
-    def PingCheck(self, local_net, remote_net):
+    def PingCheck(self, local_net, remote_net, ver=4):
         c = self.conn
-        if not remote_net.ipv4:
-            logger.debug("No Ip network")
-            return False
-        if not self.RouteCheck(local_net, remote_net):
+        if ver == 4:
+            if not remote_net.ipv4:
+                logger.debug("No Ipv4 network")
+                return False
+            cmd_string = "ping %s count 2 timeout 1 vrf %s source %s" % (remote_net.ipv4.ip, local_net.vr, local_net.ipv4.ip)
+        elif ver == 6:
+            if not remote_net.ipv6:
+                logger.debug("No Ipv6 network")
+                return False
+            cmd_string = "ping6 %s count 2 timeout 1 vrf %s" % (remote_net.ipv6.ip, local_net.vr)
+        else:
+            logger.error("Unexpected ip version %s" % ver)
+            assert False
+        if not self.RouteCheck(local_net, remote_net, ver):
             logger.debug("Route check failed")
             return True
-        cmd_string = "ping %s count 2 timeout 1 vrf %s" % (remote_net.ipv4.ip, local_net.vr)
+        retval = True
         r = c.Run([cmd_string])
         for line in r.splitlines():
             res_obj = re.search(r'[\d]+ packets transmitted, [\d]+ packets received,( [\d+]+ errors ,)? ([\d.]+)\% packet loss', line)
             if res_obj:
                 loss = float(res_obj.group(2))
-                logger.debug("Packet loss %s", loss)
-                if loss == 100:
-                    return True
-        return False
+                if loss < 100:
+                    logger.debug("Packet loss is within tolerance: %s", loss)
+                    retval = False
+                    break
+        return retval
 
-    def RouteCheck(self, local_net, remote_net):
+    def RouteCheck(self, local_net, remote_net, ver=4):
         attempts = 10
         c = self.conn
-        search_string = "%s/%s" % (remote_net.ipv4.network, remote_net.ipv4.prefixlen)
+        if ver == 4: 
+            search_string = "%s/%s" % (remote_net.ipv4.network, remote_net.ipv4.prefixlen)
+            cmd_string = "show ip route vrf %s | grep %s" % (local_net.vr, search_string)
+        elif ver == 6: 
+            search_string = "%s/%s" % (remote_net.ipv6.network, remote_net.ipv6.prefixlen)
+            cmd_string = "show ipv6 route vrf %s | grep %s" % (local_net.vr, search_string)
+        else:
+            logger.error("Unexpected version: %s" % ver)
+            assert False
         logger.debug("Looking for a route to %s ..." % search_string)
         for i in range(attempts):
-            cmd_string = "show ip route vrf %s" % local_net.vr
             r = c.Run([cmd_string])
             for line in r.splitlines():
-                res_obj = re.search(r'([\d./]+), ubest/mbest', line)
+                res_obj = re.search(r'([A-Fa-f\d.:/]+), ubest/mbest', line)
                 if res_obj:
                     entry = res_obj.group(1)
                     if entry == search_string:  
@@ -181,6 +423,8 @@ class Parser(object):
         else: 
             logger.error("Unkwnon host type %s" % type)
             assert False
+        if 'configure' in tag.attrib.keys() and tag.attrib['configure'] == "yes":
+            new_host.verify_only = False
         for next_tag in tag:
             assert next_tag.tag == "make"
             name = next_tag.attrib['name']
@@ -194,15 +438,21 @@ class Parser(object):
         system.AddEquipment(new_host)
 
     def __AddLinks(self, system, tag):
+        assert 'bandwidth' in tag.attrib.keys()
         bw = tag.attrib['bandwidth']
         nodes = [ ]
         intfs = [ ]
+        assert 'node_a' in tag.attrib.keys()
+        assert 'node_b' in tag.attrib.keys()
+        assert 'interface_a' in tag.attrib.keys()
+        assert 'interface_b' in tag.attrib.keys()
         nodes.append(tag.attrib['node_a'])
         intfs.append(tag.attrib['interface_a'])
         nodes.append(tag.attrib['node_b'])
         intfs.append(tag.attrib['interface_b'])
         # create Interface and add to host
-        name = nodes[0] + "-" + nodes[1]
+        name = "Link %s:%s - %s:%s" % (nodes[0], intfs[0], nodes[1], intfs[1])
+        logger.debug("Adding link: %s" % name)
         new_link = Link(name)
         system.AddLink(new_link)
         for index in range(0,2):
@@ -213,8 +463,8 @@ class Parser(object):
             new_link.interfaces.append(intf)
         for next_tag in tag:
             assert next_tag.tag == "connectivity"
-            c = Connectivity()
             assert 'vlan' in next_tag.attrib.keys()
+            c = Connectivity()
             c.vlan = next_tag.attrib['vlan']
             if 'port_channel' in next_tag.attrib.keys():
                 c.port_channel = next_tag.attrib['port_channel']
@@ -226,7 +476,7 @@ class Parser(object):
                     nets.append(sub_tag.attrib['ipv4_a'])
                     nets.append(sub_tag.attrib['ipv4_b'])
                     c.AddIpv4Networks(nets)
-                if 'ipv6' in sub_tag.attrib.keys():
+                if 'ipv6_a' in sub_tag.attrib.keys():
                     assert 'ipv6_b' in sub_tag.attrib.keys()
                     nets = [ ]
                     nets.append(sub_tag.attrib['ipv6_a'])
@@ -239,6 +489,58 @@ class Parser(object):
                 vrs.append(sub_tag.attrib['vr_b'])
                 c.AddVrs(vrs)
             new_link.AddConnectivity(c)
+
+    def __AddRoutes(self, system, tag):
+        assert 'type' in tag.attrib.keys()
+        assert 'node_from' in tag.attrib.keys()
+        assert 'node_to' in tag.attrib.keys()
+        type = tag.attrib['type']
+        node_f = tag.attrib['node_from'] 
+        node_t = tag.attrib['node_to'] 
+        node_obj_f = system.equipment_by_name[node_f]
+        node_obj_t = system.equipment_by_name[node_t]
+        new_route = Route(type)
+        new_route.node = node_obj_f
+        system.AddRoute(new_route)
+        if type == "static":
+            assert 'node_via' in tag.attrib.keys()
+            node_v = tag.attrib['node_via'] 
+        for next_tag in tag:
+            assert next_tag.tag == "network"
+            assert 'vr_from' in next_tag.attrib.keys()
+            assert 'vr_to' in next_tag.attrib.keys()
+            vr_f = next_tag.attrib['vr_from']
+            vr_t = next_tag.attrib['vr_to']
+            new_route.network_from.vr = vr_f
+            new_route.network_to.vr = vr_t
+            if type == "static":
+                assert 'vr_via' in next_tag.attrib.keys()
+                new_route.network_via.vr = next_tag.attrib['vr_via']
+            if 'v4_addr_from' in next_tag.attrib.keys():
+                assert 'v4_addr_to' in next_tag.attrib.keys()
+                addr_f = next_tag.attrib['v4_addr_from'] 
+                addr_t = next_tag.attrib['v4_addr_to'] 
+                node_obj_f.AddLoopback(addr_f, vr_f)
+                node_obj_t.AddLoopback(addr_t, vr_t)
+                new_route.network_from.AddIpv4(addr_f)
+                new_route.network_to.AddIpv4(addr_t)
+                if type == "static":
+                    assert 'v4_addr_via' in next_tag.attrib.keys()
+                    addr_v = next_tag.attrib['v4_addr_via'] 
+                    new_route.network_via.AddIpv4(addr_v)
+            elif 'v6_addr_from' in next_tag.attrib.keys():
+                assert 'v6_addr_to' in next_tag.attrib.keys()
+                addr_f = next_tag.attrib['v6_addr_from'] 
+                addr_t = next_tag.attrib['v6_addr_to'] 
+                node_obj_f.AddLoopback(addr_f, vr_f)
+                node_obj_t.AddLoopback(addr_t, vr_t)
+                new_route.network_from.AddIpv6(addr_f)
+                new_route.network_to.AddIpv6(addr_t)
+                if type == "static":
+                    assert 'v6_addr_via' in next_tag.attrib.keys()
+                    addr_v = next_tag.attrib['v6_addr_via'] 
+                    new_route.network_via.AddIpv6(addr_v)
+            new_route.AddRoute()
 
     def ParseXml(self):
         tree = ET.parse(self.xml_file)
@@ -253,6 +555,8 @@ class Parser(object):
                 self.__AddHosts(sys, next_tag)
             elif next_tag.tag == "link":
                 self.__AddLinks(sys, next_tag)
+            elif next_tag.tag == "route":
+                self.__AddRoutes(sys, next_tag)
             else: 
                 logger.error("Unkwnon tag %s" % next_tag.tag)
                 assert False
@@ -266,6 +570,7 @@ class System(object):
         self.equipment = [ ]
         self.equipment_by_name = { }
         self.links = [ ]
+        self.routes = [ ]
    
     def AddEquipment(self, host):
         self.equipment.append(host)
@@ -274,6 +579,9 @@ class System(object):
 
     def AddLink(self, link):
         self.links.append(link)
+
+    def AddRoute(self, route):
+        self.routes.append(route)
 
     def Destroy():
         pass
@@ -286,8 +594,12 @@ class System(object):
 
     def CheckConnectivity(self): 
         for l in self.links:
+            logger.debug("Link name %s" % l.name)
             l.CheckConnectivity()
 
+    def CheckRouting(self): 
+        for r in self.routes:
+            r.CheckRoute()
 
 class Make(object):
  
@@ -307,6 +619,7 @@ class Link(object):
         self.connections = [ ]
 
     def AddConnectivity(self, conn):
+        logger.debug("Adding connectivity vlan %s" % conn.vlan)
         self.connections.append(conn)
         for i in range(0, 2):
             node = self.nodes[i]
@@ -320,9 +633,12 @@ class Link(object):
         for c in self.connections:
             local_net = c.networks[0]  
             remote_net = c.networks[1]  
-        if node.PingCheck(local_net, remote_net):
-            logger.error("Ping check failed")
-            assert False
+            if node.PingCheck(local_net, remote_net):
+                logger.error("Ping check failed")
+                assert False
+            if node.PingCheck(local_net, remote_net, 6):
+                logger.error("Ping check failed")
+                assert False
  
     def Display(self):
         logger.debug("Link %s" % self.name)
@@ -340,7 +656,7 @@ class Interface(object):
         self.name = name
         self.bandwidth = bandwidth
         self.networks = [ ]
-        self.verify_only = False
+        self.verify_only = True
 
     def AddConnectivity(self, node, conn, net):
         logger.error("Method not implemented")
@@ -419,8 +735,8 @@ class LinuxInterface(Interface):
                 if device == self.name:
                     found = True
                     logger.debug("Device %s found and up (mtu: %s, qlen: %s)" % (self.name, mtu, qlen))
-                if self.bandwidth == "10G" and not qlen == 10000:
-                    logger.warning("10Gb/s link, it's preferable to set qlen to 10000, qlen %s" % qlen)
+                if self.bandwidth == "10G" and not qlen == "10000":
+                    logger.warning("10Gb/s link (%s), it's preferable to set qlen to 10000, qlen %s" % (self.bandwidth, qlen))
         if not found:
             if not self.verify_only:
                 logger.debug("Bringing up link ...")
@@ -617,6 +933,7 @@ class SwitchInterface(Interface):
                 r = c.Run([cmd_string])
                 cmd_string = "exit"
                 r = c.Run([cmd_string])
+        logger.debug("Vlan %s configured" % conn.vlan)
         # find interface, then port channel
         found = False
         logger.debug("Looking for interface %s ..." % self.name)
@@ -653,10 +970,10 @@ class StarOsInterface(Interface):
         super(StarOsInterface, self).__init__(name, bandwidth)
 
     def AddLink(self, node, conn, net):
+        logger.debug("Checking if link exists %s" % self.name)
         if conn.port_channel and not (net.ipv4 or net.ipv6):
             logger.debug("Secondary member of a port channel")
             return
-        # check if links exists, fail otherwise
         link_exists =  False       
         c = node.conn
         cmd_string = "context %s" % (net.vr)
@@ -734,8 +1051,8 @@ class Connectivity(object):
 
     def AddIpv6Networks(self, nets):
         assert len(nets) == 2
-        self.networks[0].AddIpv4(nets[0])
-        self.networks[1].AddIpv4(nets[1])
+        self.networks[0].AddIpv6(nets[0])
+        self.networks[1].AddIpv6(nets[1])
 
     def AddVrs(self, vrs):
         assert len(vrs) == 2
@@ -745,3 +1062,35 @@ class Connectivity(object):
     def Display(self):
         for n in self.networks:
             n.Display()
+
+
+class Loopback(object):
+
+    def __init__(self):
+        self.vr = None
+        self.addr = None
+
+
+class Route(object):
+
+    def __init__(self, type):
+        self.type = type
+        self.node = None
+        self.network_from = Network()
+        self.network_to = Network()
+        self.network_via = Network()
+ 
+    def AddRoute(self):
+        if self.type == "static":
+            net_from = self.network_from
+            net_to = self.network_to
+            net_via = self.network_via
+            self.node.AddRoute(net_from, net_to, net_via)
+
+    def CheckRoute(self):
+        if self.node.PingCheck(self.network_from, self.network_to):
+            logger.error("Ping check failed")
+            assert False
+        if self.node.PingCheck(self.network_from, self.network_to, 6):
+            logger.error("Ping check failed")
+            assert False

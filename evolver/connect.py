@@ -133,22 +133,22 @@ class Connect(object):
             self.connection_id.sendline(line)
             res = self.__Expect()
             for line in res.splitlines():
-                #res_obj =  re.search(r'.*Device (.*) does not exist', line)
+                #res_obj = re.search(r'.*Device (.*) does not exist', line)
                 #if res_obj:
                 #    logger.error("Error, %s" % res_obj.group())
                 #    assert False
-                res_obj =  re.search(r'(ERROR|Error|error):.*', line)
+                res_obj = re.search(r'(ERROR|Error|error):.*', line)
                 if res_obj:
                     logger.error("Error, %s" % res_obj.group())
                     assert False
-                res_obj =  re.search(r'RTNETLINK answers:(.*)', line)
+                res_obj = re.search(r'RTNETLINK answers:(.*)', line)
                 if res_obj:
                     logger.error("Error, %s" % res_obj.group())
                     assert False
-                #res_obj =  re.search(r'.*Invalid command at', line)
-                #if res_obj:
-                #    logger.error("Error, %s" % res_obj.group())
-                #    assert False
+                res_obj = re.search(r'\% Invalid command at \'\^\" marker', line)
+                if res_obj:
+                    logger.error("Error, %s" % res_obj.group())
+                    assert False
         return res
 
     def Close(self):
