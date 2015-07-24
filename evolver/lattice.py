@@ -56,7 +56,24 @@ class CallModel(object):
  
     def CallEventSequence(self, apns, **options):
         if self.name == "vzw-hsgw-make-break-1":
+            logger.debug("Call Sequence not implemented")
             assert False
+        elif self.name == "vzw-sgw-make-break-1":
+            logger.debug("Call Sequence not implemented")
+            assert False
+        elif self.name == "vzw-sgw-make-break-2":
+            assert len(apns) == 2
+            logger.debug("    call-event-sequence name %s" % self.name)
+            logger.debug("        initial-attach lte sgw-set sgw-1 apn %s" % apns[0].name)
+            logger.debug("        new-pdn apn %s delay 1" % apns[1].name)
+            logger.debug("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
+            logger.debug("        break-call delay 1")
+            logger.debug("        iterate-count unlimited")
+            logger.debug("        make-call apn %s delay 1" % apns[0].name)
+            logger.debug("        new-pdn apn %s delay 1" % apns[1].name)
+            logger.debug("        delete-pdn apn internet-1 delay %s" % options["delay"])
+            logger.debug("        break-call delay 1")
+            logger.debug("    #exit")
         elif self.name == "vzw-hsgw-make-break-2":
             assert len(apns) == 2
             logger.debug("    call-event-sequence name %s" % self.name)
@@ -70,4 +87,6 @@ class CallModel(object):
             logger.debug("        delete-pdn apn internet-1 delay %s" % options["delay"])
             logger.debug("        break-call delay 1")
             logger.debug("    #exit")
-
+        else:
+            logger.debug("Call Sequence not implemented")
+            assert False

@@ -329,6 +329,7 @@ class ToolParser(object):
                 cgh.cli = "127.0.0.1"
                 cgh.clp = 65500 - (i * 3)
                 cgh.affinity = int(aff) + i
+                # This will need to be passed 
                 cgh.user_config = "/localdisk/master_files/lattice%s_%s.cfg" % (id, i)
                 stargen.cg_handler = cgh
                 master.clients.append(stargen)

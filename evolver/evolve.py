@@ -82,6 +82,7 @@ class DebianHost(Host):
                 if res == ip:
                     logger.debug("Loopback found: %s", res)
                     found = True
+                    break
         if not found and not self.verify_only:
             cmd_string = "setvr %s ip addr add %s dev lo" % (vr, ip)
             r = c.Run([cmd_string])
@@ -90,20 +91,25 @@ class DebianHost(Host):
         new_intf = LinuxInterface(name, bandwidth)
         self.interfaces.append(new_intf)
         self.interfaces_by_name[name] = new_intf
+        new_intf.verify_only = self.verify_only
         new_intf.Bringup(self.conn)
         new_intf.RingSize(self.conn)
-        if not self.verify_only:
-            new_intf.verify_only = False
 
     def AddRoute(self, net_from, net_to, net_via, ver=4):
         c = self.conn
         # check route
         if ver == 4:
+            if not net_to.ipv4:
+                logger.warning("No ipv4 network")
+                return
             cmd_string = "setvr %s ip route show | grep %s" % (net_from.vr, net_to.ipv4.ip)
             route_string = "setvr %s ip route add %s via %s" % (net_from.vr, net_to.ipv4.ip, net_via.ipv4.ip)
             to_target = net_to.ipv4.ip
             via_target = net_via.ipv4.ip
         elif ver == 6:
+            if not net_to.ipv6:
+                logger.warning("No ipv6 network")
+                return
             cmd_string = "setvr %s ip -6 route show | grep %s" % (net_from.vr, net_to.ipv6.ip)
             route_string = "setvr %s ip -6 route add %s via %s" % (net_from.vr, net_to.ipv6.ip, net_via.ipv6.ip)
             to_target = net_to.ipv6.ip
@@ -121,6 +127,7 @@ class DebianHost(Host):
                 if to == to_target and via == via_target:
                     logger.debug("Route to %s via %s found" % (to, via))
                     found = True
+                    break
         # create route
         if not found:
             if self.verify_only:
@@ -184,12 +191,18 @@ class StarOsHost(Host):
         cmd_string = "context %s" % net_from.vr
         r = c.Run([cmd_string])
         if ver == 4:
+            if not net_to.ipv4:
+                logger.warning("No ipv4 network")
+                return
             cmd_string = "show ip route | grep %s" % net_to.ipv4.ip
             to_target = net_to.ipv4
             via_target = net_via.ipv4.ip
         elif ver == 6:
-            cmd_string = "show ipv6 route | grep %s" % net_to.ipv4.ipv6
-            to_target = net_to.ipv6.ip
+            if not net_to.ipv6:
+                logger.warning("No ipv6 network")
+                return
+            cmd_string = "show ipv6 route | grep %s" % net_to.ipv6.ip
+            to_target = net_to.ipv6
             via_target = net_via.ipv6.ip
         else:
             logger.error("Unexpected ip version %s" % ver)
@@ -204,8 +217,10 @@ class StarOsHost(Host):
                 if to == to_target and via == via_target:
                     logger.debug("Route to %s via %s found" % (to, via))
                     found = True
+                    break
         # create route
         if not found:
+            logger.error("Route not found, can't proceed")
             assert False
 
     def PingCheck(self, local_net, remote_net, ver=4):
@@ -278,6 +293,7 @@ class Switch(Host):
                 if res == ip:
                     logger.debug("Loopback found: %s", res)
                     found = True
+                    break
         if not found and not self.verify_only:
             # assign mumber to interface
             unavail_num = [ ]
@@ -312,10 +328,16 @@ class Switch(Host):
         # check route
         c = self.conn
         if ver == 4:
+            if not net_to.ipv4:
+                logger.warning("No ipv4 network")
+                return
             cmd_string = "show ip route vrf %s | grep -A 1 %s" % (net_from.vr, net_to.ipv4)
             to_target = net_to.ipv4
             via_target = net_via.ipv4.ip
         elif ver == 6:
+            if not net_to.ipv6:
+                logger.warning("No ipv6 network")
+                return
             cmd_string = "show ipv6 route vrf %s | grep -A 1 %s" % (net_from.vr, net_to.ipv6)
             to_target = net_to.ipv6
             via_target = net_via.ipv6.ip
@@ -336,6 +358,7 @@ class Switch(Host):
             if to == to_target and via == via_target:
                 logger.debug("Route to %s via %s found" % (to, via))
                 found = True
+                break
         # create route
         if not found:
             assert False
@@ -540,7 +563,7 @@ class Parser(object):
                     assert 'v6_addr_via' in next_tag.attrib.keys()
                     addr_v = next_tag.attrib['v6_addr_via'] 
                     new_route.network_via.AddIpv6(addr_v)
-            new_route.AddRoute()
+        new_route.AddRoute()
 
     def ParseXml(self):
         tree = ET.parse(self.xml_file)
@@ -733,10 +756,11 @@ class LinuxInterface(Interface):
                 mtu = res_obj.group(2)
                 qlen = res_obj.group(3)
                 if device == self.name:
-                    found = True
                     logger.debug("Device %s found and up (mtu: %s, qlen: %s)" % (self.name, mtu, qlen))
                 if self.bandwidth == "10G" and not qlen == "10000":
                     logger.warning("10Gb/s link (%s), it's preferable to set qlen to 10000, qlen %s" % (self.bandwidth, qlen))
+                    found = True
+                    break
         if not found:
             if not self.verify_only:
                 logger.debug("Bringing up link ...")
@@ -1086,6 +1110,7 @@ class Route(object):
             net_to = self.network_to
             net_via = self.network_via
             self.node.AddRoute(net_from, net_to, net_via)
+            self.node.AddRoute(net_from, net_to, net_via, 6)
 
     def CheckRoute(self):
         if self.node.PingCheck(self.network_from, self.network_to):
