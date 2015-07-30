@@ -68,11 +68,6 @@ class CallModel(object):
             logger.debug("        new-pdn apn %s delay 1" % apns[1].name)
             logger.debug("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
             logger.debug("        break-call delay 1")
-            logger.debug("        iterate-count unlimited")
-            logger.debug("        make-call apn %s delay 1" % apns[0].name)
-            logger.debug("        new-pdn apn %s delay 1" % apns[1].name)
-            logger.debug("        delete-pdn apn internet-1 delay %s" % options["delay"])
-            logger.debug("        break-call delay 1")
             logger.debug("    #exit")
         elif self.name == "vzw-hsgw-make-break-2":
             assert len(apns) == 2
@@ -80,11 +75,6 @@ class CallModel(object):
             logger.debug("        initial-attach ehrpd hsgw-set hsgw-1 apn %s" % apns[0].name)
             logger.debug("        new-pdn apn %s delay 1" % apns[1].name)
             logger.debug("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
-            logger.debug("        break-call delay 1")
-            logger.debug("        iterate-count unlimited")
-            logger.debug("        make-call apn %s delay 1" % apns[0].name)
-            logger.debug("        new-pdn apn %s delay 1" % apns[1].name)
-            logger.debug("        delete-pdn apn internet-1 delay %s" % options["delay"])
             logger.debug("        break-call delay 1")
             logger.debug("    #exit")
         else:

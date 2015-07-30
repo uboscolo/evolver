@@ -15,6 +15,7 @@ class CallGeneratorHandler(object):
         self.clp = None
         self.affinity = None
         self.user_config = None
+        self.call_model = None
 
 
 class Master(object):
@@ -38,13 +39,38 @@ class Master(object):
 
     def CreateClients(self):
         for c in self.clients:
+            # get callgenerator object via id
+            c_ref = None
+            for o in self.callgenerators:
+                if o.id == c.id:
+                    logger.debug("Found associated object id %s" % o.id)
+                    c_ref = o
+                    break
+            if not c_ref:
+                logger.error("Did not find associated object, can't proceed")
+                assert False
             tm = self.traffic_models_by_name[c.tm_handler]
             gen = "%sGen" % tm.protocol
-            out = "create_client {%s handle %s affinity %s vr %s callgen_type %s clp %s cli %s af %s user_config %s stargen_generator %s rsa %s rv6sa %s dst_port %s xml_file %s}" % (c.host, c.handle, c.affinity, c.vr, c.cg_handler.type, c.cg_handler.clp, c.cg_handler.cli, c.cg_handler.affinity, c.cg_handler.user_config, gen, c.dst_ipv4_addr, c.dst_ipv6_addr, tm.dst_port, tm.descriptor)
+            out = "create_client {%s handle %s affinity %s vr %s callgen_type %s clp %s cli %s af %s user_config %s call_model %s stargen_generator %s rsa %s rv6sa %s dst_port %s txrate 1 xml_file %s}" % (c.host, c.handle, c.affinity, c.vr, c.cg_handler.type, c.cg_handler.clp, c.cg_handler.cli, c.cg_handler.affinity, c.cg_handler.user_config, c_ref.call_model, gen, c.dst_ipv4_addr, c.dst_ipv6_addr, tm.dst_port, tm.descriptor)
             logger.debug(out)
+        logger.debug("dynamic_address \"yes\"")
+        logger.debug("idle_timeout 2000")
+
+
+
 
     def CreateLatticeConfigs(self):
         for l in self.callgenerators:
+            # get client object via id
+            c_ref = None
+            for o in self.clients:
+                logger.debug("client ID: %s, calgen ID: %s" % (o.id, l.id))
+                if o.id == l.id:
+                    c_ref = o
+                    break
+            if not c_ref:
+                logger.error("Did not find associated object, can't proceed")
+                assert False
             lt = self.lte_networks_by_name[l.lte_network]
             logger.debug("configure")
             logger.debug("    lte-policy")
@@ -61,11 +87,12 @@ class Master(object):
                 logger.debug("            pdn apn %s type %s" % (a.name, a.type))
                 logger.debug("                location-reporting tai")
                 logger.debug("                location-reporting cgid")
-                logger.debug("            count %s" % l.call_model.count)
-                logger.debug("            initial-imsi %s%s%s00001" % (lt.mcc, lt.mnc, l.imsi_fill))
-                logger.debug("            initial-imei 999991546123451")
-                logger.debug("            kasme 34595956959")
                 logger.debug("        #exit")
+            logger.debug("            count %s" % l.call_model.count)
+            logger.debug("            initial-imsi %s%s%s00001" % (lt.mcc, lt.mnc, l.imsi_fill))
+            logger.debug("            initial-imei 999991546123451")
+            logger.debug("            kasme 34595956959")
+            logger.debug("        #exit")
             logger.debug("        hss-service name hss-1")
             for a in lt.apns:
                 logger.debug("            pdn apn %s type %s" % (a.name, a.type))
@@ -73,7 +100,7 @@ class Master(object):
                 logger.debug("                arp %s" % (a.arp))
                 logger.debug("                pre-emption-capability %s" % (a.pec))
                 logger.debug("            #exit")
-                logger.debug("        #exit")
+            logger.debug("        #exit")
             logger.debug("        enodeb-set name enb-1")
             logger.debug("            global-type macro")
             logger.debug("            count 1")
@@ -120,8 +147,8 @@ class Master(object):
             logger.debug("        tun-interface name %s" % l.tunnel_dev)
             logger.debug("        local ip address 1.1.1.1")
             logger.debug("        local ipv6 address 1111::1.1.1.1")
-            logger.debug("        remote ip network %s" % l.data_plane.remote_ipv4_addr)
-            logger.debug("        remote ipv6 network %s" % l.data_plane.remote_ipv6_addr)
+            logger.debug("        remote ip network %s" % c_ref.dst_ipv4_addr)
+            logger.debug("        remote ipv6 network %s" % c_ref.dst_ipv6_addr)
             logger.debug("        #exit")
             logger.debug("    #exit")
             opts = { }
@@ -164,6 +191,7 @@ class TrafficModel(object):
         self.src_port = None
         # XML file
         self.descriptor = None
+        self.data_version = None
 
 
 class ToolParser(object):
@@ -222,7 +250,7 @@ class ToolParser(object):
                 raise
         for i in range(int(num_inst)):
             lattice = Lattice()
-            lattice.id = id
+            lattice.id = "%s-%s" % (id, i)
             lattice.tunnel_dev = "tun-%s" % i
             lattice.imsi_fill =  "%03d%s" % (int(id), i)
             lattice.lte_network = lte_net 
@@ -314,7 +342,7 @@ class ToolParser(object):
         for i in range(int(num_inst)):
             handle = "%s-%s-%s" % (type, id, i)
             stargen = Stargen(handle)
-            stargen.id = id
+            stargen.id = "%s-%s" % (id, i)
             stargen.host = host
             stargen.affinity = int(math.pow(2, (int(aff) + i)))
             stargen.vr = vr
@@ -347,13 +375,19 @@ class ToolParser(object):
             assert 'protocol' in next_tag.attrib.keys()
             assert 'port' in next_tag.attrib.keys()
             assert 'descriptor' in next_tag.attrib.keys()
+            assert 'ip_version' in next_tag.attrib.keys()
             prot = next_tag.attrib['protocol']
             port = next_tag.attrib['port']
             desc = next_tag.attrib['descriptor']
+            vers = next_tag.attrib['ip_version']
         tm = TrafficModel(name)
         tm.protocol = prot
         tm.dst_port = port
         tm.descriptor = desc
+        if vers == "ipv4":
+            tm.data_version = "data_tx_ipv4"
+        elif vers == "ipv6":
+            tm.data_version = "data_tx_ipv6"
         master.traffic_models.append(tm)
         master.traffic_models_by_name[name] =  tm
 

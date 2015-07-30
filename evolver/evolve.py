@@ -26,7 +26,7 @@ class Host(object):
         logger.error("Method not implemented")
         assert False
 
-    def AddLoopback(self, addr, vr):
+    def AddLoopback(self, addr, vr, num=1):
         logger.error("Method not implemented")
         assert False
 
@@ -56,36 +56,38 @@ class DebianHost(Host):
         self.username = "root"
         self.password = "starent"
 
-    def AddLoopback(self, addr, vr):
-        logger.debug("Adding loopback interface")
-        ip = netaddr.IPNetwork(addr)
-        if ip.version == "4" and  not ip.prefixlen == "32":
-            logger.error("Not a loopback address %s" % ip)
-            assert False
-        if ip.version == "6" and  not ip.prefixlen == "128":
-            logger.error("Not a loopback address %s" % ip)
-            assert False
-        lb = Loopback()
-        lb.vr = vr
-        lb.addr = ip
-        self.loopbacks.append(lb)
-        # check if loopback exists
-        found = False
-        c = self.conn
-        cmd_string = "setvr %s ip addr show | grep %s" % (vr, ip)
-        r = c.Run([cmd_string])
-        for line in r.splitlines():
-            res_obj = re.search(r'[\s]+inet6? ([A-Fa-f\d.:/]+)', line)
-            if res_obj:
-                res = netaddr.IPNetwork(res_obj.group(1))
-                logger.debug("Loopback target: %s", res)
-                if res == ip:
-                    logger.debug("Loopback found: %s", res)
-                    found = True
-                    break
-        if not found and not self.verify_only:
-            cmd_string = "setvr %s ip addr add %s dev lo" % (vr, ip)
+    def AddLoopback(self, addr, vr, num=1):
+        for l in range(num):
+            logger.debug("Adding loopback interface")
+            ip = netaddr.IPNetwork(addr)
+            ip.__iadd__(l)
+            if ip.version == 4 and not ip.prefixlen == "32":
+                logger.error("Not a loopback address %s" % ip)
+                return
+            if ip.version == 6 and not ip.prefixlen == "128":
+                logger.error("Not a loopback address %s" % ip)
+                return
+            lb = Loopback()
+            lb.vr = vr
+            lb.addr = ip
+            self.loopbacks.append(lb)
+            # check if loopback exists
+            found = False
+            c = self.conn
+            cmd_string = "setvr %s ip addr show | grep %s" % (vr, ip)
             r = c.Run([cmd_string])
+            for line in r.splitlines():
+                res_obj = re.search(r'[\s]+inet6? ([A-Fa-f\d.:/]+)', line)
+                if res_obj:
+                    res = netaddr.IPNetwork(res_obj.group(1))
+                    logger.debug("Loopback target: %s", res)
+                    if res == ip:
+                        logger.debug("Loopback found: %s", res)
+                        found = True
+                        break
+            if not found and not self.verify_only:
+                cmd_string = "setvr %s ip addr add %s dev lo" % (vr, ip)
+                r = c.Run([cmd_string])
         
     def AddInterface(self, name, bandwidth):
         new_intf = LinuxInterface(name, bandwidth)
@@ -103,24 +105,24 @@ class DebianHost(Host):
                 logger.warning("No ipv4 network")
                 return
             cmd_string = "setvr %s ip route show | grep %s" % (net_from.vr, net_to.ipv4.ip)
-            route_string = "setvr %s ip route add %s via %s" % (net_from.vr, net_to.ipv4.ip, net_via.ipv4.ip)
             to_target = net_to.ipv4.ip
             via_target = net_via.ipv4.ip
+            route_string = "setvr %s ip route add %s via %s" % (net_from.vr, net_to.ipv4, net_via.ipv4.ip)
         elif ver == 6:
             if not net_to.ipv6:
                 logger.warning("No ipv6 network")
                 return
             cmd_string = "setvr %s ip -6 route show | grep %s" % (net_from.vr, net_to.ipv6.ip)
-            route_string = "setvr %s ip -6 route add %s via %s" % (net_from.vr, net_to.ipv6.ip, net_via.ipv6.ip)
             to_target = net_to.ipv6.ip
             via_target = net_via.ipv6.ip
+            route_string = "setvr %s ip -6 route add %s via %s" % (net_from.vr, net_to.ipv6, net_via.ipv6.ip)
         else:
             logger.error("Unexpected ip version %s" % ver)
             assert False
         found = False
         r = c.Run([cmd_string])
         for line in r.splitlines():
-            res_obj = re.search(r'([A-Fa-f\d.:]+) via ([A-Fa-f\d.:]+)', line)
+            res_obj = re.search(r'([A-Fa-f\d.:/]+) via ([A-Fa-f\d.:]+)', line)
             if res_obj:
                 to = netaddr.IPNetwork(res_obj.group(1)).ip
                 via = netaddr.IPNetwork(res_obj.group(2)).ip
@@ -140,12 +142,12 @@ class DebianHost(Host):
         c = self.conn
         retval = True
         if ver == 4:
-            if not remote_net.ipv4:
+            if not remote_net.ipv4 or remote_net.ipv4.ip == remote_net.ipv4.network:
                 logger.debug("No ipv4 network")
                 return False
             cmd_string = "setvr %s ping -c 2 -w 1 -i 0.5 %s -I %s" % (local_net.vr, remote_net.ipv4.ip, local_net.ipv4.ip)
         elif ver == 6:
-            if not remote_net.ipv6:
+            if not remote_net.ipv6 or remote_net.ipv6.ip == remote_net.ipv6.network:
                 logger.debug("No ipv6 network")
                 return False
             cmd_string = "setvr %s ping6 -c 2 -w 1 %s -i 0.5 -I %s" % (local_net.vr, remote_net.ipv6.ip, local_net.ipv6.ip)
@@ -182,8 +184,9 @@ class StarOsHost(Host):
         if not self.verify_only:
             new_intf.verify_only = False
 
-    def AddLoopback(self, addr, vr):
-        logger.debug("Checking for loopback")
+    def AddLoopback(self, addr, vr, num=1):
+        for l in range(num):
+            logger.debug("Checking for loopback")
 
     def AddRoute(self, net_from, net_to, net_via, ver=4):
         # check route
@@ -227,13 +230,13 @@ class StarOsHost(Host):
         logger.debug("Verifying pingability")
         c = self.conn
         if ver == 4:
-            if not remote_net.ipv4:
-                logger.debug("No Ipv4 network")
+            if not remote_net.ipv4 or remote_net.ipv4.ip == remote_net.ipv4.network:
+                logger.debug("No ipv4 network")
                 return False
             ping_string = "ping %s count 2 src %s" % (remote_net.ipv4.ip, local_net.ipv4.ip)
         elif ver == 6:
-            if not remote_net.ipv6:
-                logger.debug("No Ipv6 network")
+            if not remote_net.ipv6 or remote_net.ipv6.ip == remote_net.ipv6.network:
+                logger.debug("No ipv6 network")
                 return False
             ping_string = "ping6 %s count 2 src %s" % (remote_net.ipv6.ip, local_net.ipv6.ip)
         else:
@@ -268,61 +271,63 @@ class Switch(Host):
         if not self.verify_only:
             new_intf.verify_only = False
 
-    def AddLoopback(self, addr, vr):
-        logger.debug("checking for loopback ...")
-        ip = netaddr.IPNetwork(addr)
-        if ip.version == "4" and  not ip.prefixlen == "32":
-            logger.error("Not a loopback address %s" % ip)
-            assert False
-        if ip.version == "6" and  not ip.prefixlen == "128":
-            logger.error("Not a loopback address %s" % ip)
-            assert False
-        lb = Loopback()
-        lb.vr = vr
-        lb.addr = ip
-        self.loopbacks.append(lb)
-        # check if loopback exists
-        found = False
-        c = self.conn
-        cmd_string = "show interface | grep %s" % ip
-        r = c.Run([cmd_string])
-        for line in r.splitlines():
-            res_obj = re.search(r'  Internet Address is ([A-Fa-f\d.:/]+)', line)
-            if res_obj:
-                res = netaddr.IPNetwork(res_obj.group(1))
-                if res == ip:
-                    logger.debug("Loopback found: %s", res)
-                    found = True
-                    break
-        if not found and not self.verify_only:
-            # assign mumber to interface
-            unavail_num = [ ]
-            if_num = None
-            cmd_string = "show interface brief | grep Lo"
+    def AddLoopback(self, addr, vr, num=1):
+        for l in range(num):
+            logger.debug("checking for loopback ...")
+            ip = netaddr.IPNetwork(addr)
+            ip.__iadd__(l)
+            if ip.version == "4" and  not ip.prefixlen == "32":
+                logger.error("Not a loopback address %s" % ip)
+                assert False
+            if ip.version == "6" and  not ip.prefixlen == "128":
+                logger.error("Not a loopback address %s" % ip)
+                assert False
+            lb = Loopback()
+            lb.vr = vr
+            lb.addr = ip
+            self.loopbacks.append(lb)
+            # check if loopback exists
+            found = False
+            c = self.conn
+            cmd_string = "show interface | grep %s" % ip
             r = c.Run([cmd_string])
             for line in r.splitlines():
-                res_obj = re.search(r'Lo([\d]+)', line)
+                res_obj = re.search(r'  Internet Address is ([A-Fa-f\d.:/]+)', line)
                 if res_obj:
-                    num = int(res_obj.group(1))
-                    unavail_num.append(num) 
-            for i in range(1, 1024):
-                if not i in unavail_num:
-                    logger.debug("Next available loopback is %s" % i)
-                    if_num = i
-                    break
-            if not if_num:
-                logger.error("Ran out of loopback interfaces (%s)" % i)
-                assert False
-            cmd_string = "configure terminal"
-            r = c.Run([cmd_string])
-            cmd_string = "interface loopback %s" % if_num
-            r = c.Run([cmd_string])
-            cmd_string = "vrf member %s" % vr
-            r = c.Run([cmd_string])
-            cmd_string = "ip address %s" % ip
-            r = c.Run([cmd_string])
-            cmd_string = "end"
-            r = c.Run([cmd_string])
+                    res = netaddr.IPNetwork(res_obj.group(1))
+                    if res == ip:
+                        logger.debug("Loopback found: %s", res)
+                        found = True
+                        break
+            if not found and not self.verify_only:
+                # assign mumber to interface
+                unavail_num = [ ]
+                if_num = None
+                cmd_string = "show interface brief | grep Lo"
+                r = c.Run([cmd_string])
+                for line in r.splitlines():
+                    res_obj = re.search(r'Lo([\d]+)', line)
+                    if res_obj:
+                        num = int(res_obj.group(1))
+                        unavail_num.append(num) 
+                for i in range(1, 1024):
+                    if not i in unavail_num:
+                        logger.debug("Next available loopback is %s" % i)
+                        if_num = i
+                        break
+                if not if_num:
+                    logger.error("Ran out of loopback interfaces (%s)" % i)
+                    assert False
+                cmd_string = "configure terminal"
+                r = c.Run([cmd_string])
+                cmd_string = "interface loopback %s" % if_num
+                r = c.Run([cmd_string])
+                cmd_string = "vrf member %s" % vr
+                r = c.Run([cmd_string])
+                cmd_string = "ip address %s" % ip
+                r = c.Run([cmd_string])
+                cmd_string = "end"
+                r = c.Run([cmd_string])
 
     def AddRoute(self, net_from, net_to, net_via, ver=4):
         # check route
@@ -371,13 +376,13 @@ class Switch(Host):
     def PingCheck(self, local_net, remote_net, ver=4):
         c = self.conn
         if ver == 4:
-            if not remote_net.ipv4:
-                logger.debug("No Ipv4 network")
+            if not remote_net.ipv4 or remote_net.ipv4.ip == remote_net.ipv4.network:
+                logger.debug("No ipv4 network")
                 return False
             cmd_string = "ping %s count 2 timeout 1 vrf %s source %s" % (remote_net.ipv4.ip, local_net.vr, local_net.ipv4.ip)
         elif ver == 6:
-            if not remote_net.ipv6:
-                logger.debug("No Ipv6 network")
+            if not remote_net.ipv6 or remote_net.ipv6.ip == remote_net.ipv6.network:
+                logger.debug("No ipv4 network")
                 return False
             cmd_string = "ping6 %s count 2 timeout 1 vrf %s" % (remote_net.ipv6.ip, local_net.vr)
         else:
@@ -522,48 +527,55 @@ class Parser(object):
         node_t = tag.attrib['node_to'] 
         node_obj_f = system.equipment_by_name[node_f]
         node_obj_t = system.equipment_by_name[node_t]
-        new_route = Route(type)
-        new_route.node = node_obj_f
-        system.AddRoute(new_route)
-        if type == "static":
-            assert 'node_via' in tag.attrib.keys()
-            node_v = tag.attrib['node_via'] 
-        for next_tag in tag:
-            assert next_tag.tag == "network"
-            assert 'vr_from' in next_tag.attrib.keys()
-            assert 'vr_to' in next_tag.attrib.keys()
-            vr_f = next_tag.attrib['vr_from']
-            vr_t = next_tag.attrib['vr_to']
-            new_route.network_from.vr = vr_f
-            new_route.network_to.vr = vr_t
+        num_routes = 1
+        if 'num' in tag.attrib.keys():
+            num_routes = int(tag.attrib['num'])
+        for r in range(num_routes):
+            new_route = Route(type)
+            new_route.node = node_obj_f
+            system.AddRoute(new_route)
             if type == "static":
-                assert 'vr_via' in next_tag.attrib.keys()
-                new_route.network_via.vr = next_tag.attrib['vr_via']
-            if 'v4_addr_from' in next_tag.attrib.keys():
-                assert 'v4_addr_to' in next_tag.attrib.keys()
-                addr_f = next_tag.attrib['v4_addr_from'] 
-                addr_t = next_tag.attrib['v4_addr_to'] 
-                node_obj_f.AddLoopback(addr_f, vr_f)
-                node_obj_t.AddLoopback(addr_t, vr_t)
-                new_route.network_from.AddIpv4(addr_f)
-                new_route.network_to.AddIpv4(addr_t)
+                assert 'node_via' in tag.attrib.keys()
+                node_v = tag.attrib['node_via'] 
+            for next_tag in tag:
+                assert next_tag.tag == "network"
+                assert 'vr_from' in next_tag.attrib.keys()
+                assert 'vr_to' in next_tag.attrib.keys()
+                vr_f = next_tag.attrib['vr_from']
+                vr_t = next_tag.attrib['vr_to']
+                num_loop = 1
+                if 'num_from' in next_tag.attrib.keys():
+                    num_loop = int(next_tag.attrib['num_from'])
+                new_route.network_from.vr = vr_f
+                new_route.network_to.vr = vr_t
                 if type == "static":
-                    assert 'v4_addr_via' in next_tag.attrib.keys()
-                    addr_v = next_tag.attrib['v4_addr_via'] 
-                    new_route.network_via.AddIpv4(addr_v)
-            elif 'v6_addr_from' in next_tag.attrib.keys():
-                assert 'v6_addr_to' in next_tag.attrib.keys()
-                addr_f = next_tag.attrib['v6_addr_from'] 
-                addr_t = next_tag.attrib['v6_addr_to'] 
-                node_obj_f.AddLoopback(addr_f, vr_f)
-                node_obj_t.AddLoopback(addr_t, vr_t)
-                new_route.network_from.AddIpv6(addr_f)
-                new_route.network_to.AddIpv6(addr_t)
-                if type == "static":
-                    assert 'v6_addr_via' in next_tag.attrib.keys()
-                    addr_v = next_tag.attrib['v6_addr_via'] 
-                    new_route.network_via.AddIpv6(addr_v)
-        new_route.AddRoute()
+                    assert 'vr_via' in next_tag.attrib.keys()
+                    new_route.network_via.vr = next_tag.attrib['vr_via']
+                if 'v4_addr_from' in next_tag.attrib.keys():
+                    assert 'v4_addr_to' in next_tag.attrib.keys()
+                    addr_f = next_tag.attrib['v4_addr_from'] 
+                    addr_t = next_tag.attrib['v4_addr_to'] 
+                    node_obj_f.AddLoopback(addr_f, vr_f, num_loop)
+                    node_obj_t.AddLoopback(addr_t, vr_t)
+                    new_route.network_from.AddIpv4(addr_f)
+                    new_route.network_to.AddIpv4(addr_t, r)
+                    if type == "static":
+                        assert 'v4_addr_via' in next_tag.attrib.keys()
+                        addr_v = next_tag.attrib['v4_addr_via'] 
+                        new_route.network_via.AddIpv4(addr_v)
+                elif 'v6_addr_from' in next_tag.attrib.keys():
+                    assert 'v6_addr_to' in next_tag.attrib.keys()
+                    addr_f = next_tag.attrib['v6_addr_from'] 
+                    addr_t = next_tag.attrib['v6_addr_to'] 
+                    node_obj_f.AddLoopback(addr_f, vr_f, num_loop)
+                    node_obj_t.AddLoopback(addr_t, vr_t)
+                    new_route.network_from.AddIpv6(addr_f)
+                    new_route.network_to.AddIpv6(addr_t, r)
+                    if type == "static":
+                        assert 'v6_addr_via' in next_tag.attrib.keys()
+                        addr_v = next_tag.attrib['v6_addr_via'] 
+                        new_route.network_via.AddIpv6(addr_v)
+            new_route.AddRoute()
 
     def ParseXml(self):
         tree = ET.parse(self.xml_file)
@@ -1042,11 +1054,23 @@ class Network(object):
         self.ipv4 = None
         self.ipv6 = None
 
-     def AddIpv4(self, addr):
+     def AddIpv4(self, addr, offset=0):
         self.ipv4 = netaddr.IPNetwork(addr)
+        logger.debug("IP: %s" % self.ipv4.ip)
+        shift = 0
+        if offset:
+            shift = (32 - self.ipv4.prefixlen)
+        total_offset = shift + offset
+        self.ipv4.ip.__iadd__(total_offset)
+        logger.debug("IP: %s, offset: %s" % (self.ipv4.ip, total_offset))
  
-     def AddIpv6(self, addr):
+     def AddIpv6(self, addr, offset=0):
         self.ipv6 = netaddr.IPNetwork(addr)
+        shift = 0
+        if offset:
+            shift = (128 - self.ipv6.prefixlen)
+        total_offset = shift + offset
+        self.ipv6.ip.__iadd__(total_offset)
 
      def Display(self):
         if self.ipv4:

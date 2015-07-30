@@ -116,17 +116,23 @@
         <network v4_addr_from="172.29.1.129/32" vr_from="1" v4_addr_to="172.29.0.1/32" vr_to="auth-1" v4_addr_via="172.18.1.129/24" vr_via="au-1"/>
         <network v6_addr_from="fd00:0013:0001::81/128" vr_from="1" v6_addr_to="fd00:0013:0000::1/128" vr_to="auth-1" v6_addr_via="fd00:0002:0001::81/64" vr_via="au-1"/>
     </route>
+    <route type="static" node_from="luto1" node_to="evo1" node_via="evo-sw1">
+        <network v6_addr_from="fd00:0013:0001::81/128" vr_from="1" v6_addr_to="fd00:0013:0000::2/128" vr_to="auth-1" v6_addr_via="fd00:0002:0001::81/64" vr_via="au-1"/>
+    </route>
+    <route type="static" node_from="luto1" node_to="evo1" node_via="evo-sw1">
+        <network v6_addr_from="fd00:0013:0001::81/128" vr_from="1" v6_addr_to="fd00:0013:0000::3/128" vr_to="auth-1" v6_addr_via="fd00:0002:0001::81/64" vr_via="au-1"/>
+    </route>
     <route type="static" node_from="evo1" node_to="luto1" node_via="evo-sw1">
         <network v4_addr_from="172.29.0.1/32" vr_from="auth-1" v4_addr_to="172.29.1.129/32" vr_to="1" v4_addr_via="172.21.0.129/24" vr_via="au-1"/>
         <network v6_addr_from="fd00:0013:0000::1/128" vr_from="auth-1" v6_addr_to="fd00:0013:0001::81/128" vr_to="1" v6_addr_via="fd00:0005:0000::81/64" vr_via="au-1"/>
     </route>
     <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
-        <network v4_addr_from="172.30.3.129/32" vr_from="1" v4_addr_to="172.30.0.1/32" vr_to="pgw-1" v4_addr_via="172.18.3.129/24" vr_via="s5-1"/>
-        <network v6_addr_from="fd00:0014:0003::81/128" vr_from="1" v6_addr_to="fd00:0014:0000::1/128" vr_to="pgw-1" v6_addr_via="fd00:0002:0003::81/64" vr_via="s5-1"/>
+        <network v4_addr_from="172.30.3.129/32" vr_from="1" num_from="10" v4_addr_to="172.30.0.1/32" vr_to="pgw-1" v4_addr_via="172.18.3.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0003::81/128" vr_from="1" num_from="10" v6_addr_to="fd00:0014:0000::1/128" vr_to="pgw-1" v6_addr_via="fd00:0002:0003::81/64" vr_via="s5-1"/>
     </route>
     <route type="static" node_from="evo1" node_to="luto3" node_via="evo-sw1">
-        <network v4_addr_from="172.30.0.1/32" vr_from="pgw-1" v4_addr_to="172.30.3.129/32" vr_to="1" v4_addr_via="172.17.0.129/24" vr_via="s5-1"/>
-        <network v6_addr_from="fd00:0014:0000::1/128" vr_from="pgw-1" v6_addr_to="fd00:0014:0003::81/128" vr_to="1" v6_addr_via="fd00:0001:0000::81/64" vr_via="s5-1"/>
+        <network v4_addr_from="172.30.0.1/32" vr_from="pgw-1" v4_addr_to="172.30.3.0/24" vr_to="1" v4_addr_via="172.17.0.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0000::1/128" vr_from="pgw-1" v6_addr_to="fd00:0014:0003::0/64" vr_to="1" v6_addr_via="fd00:0001:0000::81/64" vr_via="s5-1"/>
     </route>
     <route type="static" node_from="evo1" node_to="evo-sw1" node_via="evo-sw1">
         <network v4_addr_from="1.0.0.1/32" vr_from="ip-1" v4_addr_to="1.0.0.129/32" vr_to="sgi-1" v4_addr_via="172.19.0.129/24" vr_via="sgi-1"/>
@@ -139,5 +145,8 @@
     </route>
     <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
         <network v4_addr_from="172.20.3.1/24" vr_from="21" v4_addr_to="1.0.0.1/32" vr_to="ip-1" v4_addr_via="172.20.3.129/24" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1" num="3">
+        <network v4_addr_from="172.28.3.129/32" vr_from="21" num_from="10" v4_addr_to="101.248.0.0/16" vr_to="ip-1" v4_addr_via="172.20.3.129/24" vr_via="sgi-1"/>
     </route>
 </system>
