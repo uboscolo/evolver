@@ -61,10 +61,10 @@ class DebianHost(Host):
             logger.debug("Adding loopback interface")
             ip = netaddr.IPNetwork(addr)
             ip.__iadd__(l)
-            if ip.version == 4 and not ip.prefixlen == "32":
+            if ip.version == 4 and not ip.prefixlen == 32:
                 logger.error("Not a loopback address %s" % ip)
                 return
-            if ip.version == 6 and not ip.prefixlen == "128":
+            if ip.version == 6 and not ip.prefixlen == 128:
                 logger.error("Not a loopback address %s" % ip)
                 return
             lb = Loopback()
@@ -186,7 +186,7 @@ class StarOsHost(Host):
 
     def AddLoopback(self, addr, vr, num=1):
         for l in range(num):
-            logger.debug("Checking for loopback")
+            logger.debug("Checking for loopback ...")
 
     def AddRoute(self, net_from, net_to, net_via, ver=4):
         # check route
@@ -273,15 +273,15 @@ class Switch(Host):
 
     def AddLoopback(self, addr, vr, num=1):
         for l in range(num):
-            logger.debug("checking for loopback ...")
+            logger.debug("Checking for loopback ...")
             ip = netaddr.IPNetwork(addr)
             ip.__iadd__(l)
-            if ip.version == "4" and  not ip.prefixlen == "32":
+            if ip.version == 4 and  not ip.prefixlen == 32:
                 logger.error("Not a loopback address %s" % ip)
-                assert False
-            if ip.version == "6" and  not ip.prefixlen == "128":
+                return
+            if ip.version == 6 and  not ip.prefixlen == 128:
                 logger.error("Not a loopback address %s" % ip)
-                assert False
+                return
             lb = Loopback()
             lb.vr = vr
             lb.addr = ip
@@ -1057,20 +1057,15 @@ class Network(object):
      def AddIpv4(self, addr, offset=0):
         self.ipv4 = netaddr.IPNetwork(addr)
         logger.debug("IP: %s" % self.ipv4.ip)
-        shift = 0
-        if offset:
-            shift = (32 - self.ipv4.prefixlen)
-        total_offset = shift + offset
-        self.ipv4.ip.__iadd__(total_offset)
-        logger.debug("IP: %s, offset: %s" % (self.ipv4.ip, total_offset))
+        offset <<= (32 - self.ipv4.prefixlen)
+        self.ipv4.ip.__iadd__(offset)
+        logger.debug("IP: %s, offset: %s" % (self.ipv4.ip, offset))
  
      def AddIpv6(self, addr, offset=0):
         self.ipv6 = netaddr.IPNetwork(addr)
-        shift = 0
-        if offset:
-            shift = (128 - self.ipv6.prefixlen)
-        total_offset = shift + offset
-        self.ipv6.ip.__iadd__(total_offset)
+        offset <<= (128 - self.ipv6.prefixlen)
+        self.ipv6.ip.__iadd__(offset)
+        logger.debug("IP: %s, offset: %s" % (self.ipv6.ip, offset))
 
      def Display(self):
         if self.ipv4:

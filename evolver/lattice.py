@@ -54,7 +54,7 @@ class CallModel(object):
         self.delay = 0
         self.options = { }
  
-    def CallEventSequence(self, apns, **options):
+    def CallEventSequence(self, cmd_list, apns, **options):
         if self.name == "vzw-hsgw-make-break-1":
             logger.debug("Call Sequence not implemented")
             assert False
@@ -63,20 +63,20 @@ class CallModel(object):
             assert False
         elif self.name == "vzw-sgw-make-break-2":
             assert len(apns) == 2
-            logger.debug("    call-event-sequence name %s" % self.name)
-            logger.debug("        initial-attach lte sgw-set sgw-1 apn %s" % apns[0].name)
-            logger.debug("        new-pdn apn %s delay 1" % apns[1].name)
-            logger.debug("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
-            logger.debug("        break-call delay 1")
-            logger.debug("    #exit")
+            cmd_list.append("    call-event-sequence name %s" % self.name)
+            cmd_list.append("        initial-attach lte sgw-set sgw-1 apn %s" % apns[0].name)
+            cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
+            cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
+            cmd_list.append("        break-call delay 1")
+            cmd_list.append("    #exit")
         elif self.name == "vzw-hsgw-make-break-2":
             assert len(apns) == 2
-            logger.debug("    call-event-sequence name %s" % self.name)
-            logger.debug("        initial-attach ehrpd hsgw-set hsgw-1 apn %s" % apns[0].name)
-            logger.debug("        new-pdn apn %s delay 1" % apns[1].name)
-            logger.debug("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
-            logger.debug("        break-call delay 1")
-            logger.debug("    #exit")
+            cmd_list.append("    call-event-sequence name %s" % self.name)
+            cmd_list.append("        initial-attach ehrpd hsgw-set hsgw-1 apn %s" % apns[0].name)
+            cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
+            cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
+            cmd_list.append("        break-call delay 1")
+            cmd_list.append("    #exit")
         else:
             logger.debug("Call Sequence not implemented")
             assert False

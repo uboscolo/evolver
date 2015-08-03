@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 import math
 import netaddr
 from evolve_log import *
+from connect import *
 from lattice import *
 
 logger = GetLogger()
@@ -29,6 +30,14 @@ class Master(object):
         self.callgenerators = [ ]
         self.lte_networks = [ ]
         self.lte_networks_by_name = { }
+        self.masterfile = "/localdisk/master_files/master_0.cfg"
+        self.support_lps_dir = "/localdisk/master_files/lps_configs"
+        self.conn = Connect("anchor1-vm1.mitg-tew01.cisco.com", "root", "starent")
+        if self.conn.Open():
+            logger.info("Connected to Master")
+
+        cmd_string = "echo > %s" % self.masterfile
+        self.conn.Run([cmd_string])
 
     def CreateServers(self):
         for s in self.servers:
@@ -36,6 +45,8 @@ class Master(object):
             gen = "%sServer" % tm.protocol
             out = "create_server {%s handle %s affinity %s vr %s stargen_generator %s rsa %s rv6sa %s dst_port %s xml_file %s}" % (s.host, s.handle, s.affinity, s.vr, gen, s.dst_ipv4_addr, s.dst_ipv6_addr, tm.dst_port, tm.descriptor)
             logger.debug(out)
+            cmd_string = "echo %s >> %s" % (out, self.masterfile)
+            self.conn.Run([cmd_string])
 
     def CreateClients(self):
         for c in self.clients:
@@ -51,13 +62,16 @@ class Master(object):
                 assert False
             tm = self.traffic_models_by_name[c.tm_handler]
             gen = "%sGen" % tm.protocol
-            out = "create_client {%s handle %s affinity %s vr %s callgen_type %s clp %s cli %s af %s user_config %s call_model %s stargen_generator %s rsa %s rv6sa %s dst_port %s txrate 1 xml_file %s}" % (c.host, c.handle, c.affinity, c.vr, c.cg_handler.type, c.cg_handler.clp, c.cg_handler.cli, c.cg_handler.affinity, c.cg_handler.user_config, c_ref.call_model, gen, c.dst_ipv4_addr, c.dst_ipv6_addr, tm.dst_port, tm.descriptor)
+            out = "create_client {%s handle %s affinity %s vr %s callgen_type %s clp %s cli %s af %s user_config %s call_model %s stargen_generator %s rsa %s rv6sa %s dst_port %s txrate 1 xml_file %s}" % (c.host, c.handle, c.affinity, c.vr, c.cg_handler.type, c.cg_handler.clp, c.cg_handler.cli, c.cg_handler.affinity, c.cg_handler.user_config, c_ref.call_model.name, gen, c.dst_ipv4_addr, c.dst_ipv6_addr, tm.dst_port, tm.descriptor)
             logger.debug(out)
+            cmd_string = "echo %s >> %s" % (out, self.masterfile)
+            self.conn.Run([cmd_string])
         logger.debug("dynamic_address \"yes\"")
+        cmd_string = "echo dynamic_address \\\"yes\\\" >> %s" % self.masterfile
+        self.conn.Run([cmd_string])
         logger.debug("idle_timeout 2000")
-
-
-
+        cmd_string = "echo idle_timeout 2000 >> %s" % self.masterfile
+        self.conn.Run([cmd_string])
 
     def CreateLatticeConfigs(self):
         for l in self.callgenerators:
@@ -72,97 +86,103 @@ class Master(object):
                 logger.error("Did not find associated object, can't proceed")
                 assert False
             lt = self.lte_networks_by_name[l.lte_network]
-            logger.debug("configure")
-            logger.debug("    lte-policy")
-            logger.debug("        tai-mgmt-db tai-db-1")
-            logger.debug("            tai-mgmt-obj tai-obj-1")
-            logger.debug("                tai mcc %s mnc %s tac %s" % (lt.mcc, lt.mnc, lt.tac))
-            logger.debug("                sgw ipv4-address %s" % l.control_plane.local_ipv4_addr.ip)
-            logger.debug("            #exit")
-            logger.debug("        #exit")
-            logger.debug("    #exit")
-            logger.debug("    network-topology")
-            logger.debug("        ue-set name ue-set1")
+            cmd_list = [ ]
+            cmd_list.append("configure")
+            cmd_list.append("    lte-policy")
+            cmd_list.append("        tai-mgmt-db tai-db-1")
+            cmd_list.append("            tai-mgmt-obj tai-obj-1")
+            cmd_list.append("                tai mcc %s mnc %s tac %s" % (lt.mcc, lt.mnc, lt.tac))
+            cmd_list.append("                sgw ipv4-address %s" % l.control_plane.local_ipv4_addr.ip)
+            cmd_list.append("            #exit")
+            cmd_list.append("        #exit")
+            cmd_list.append("    #exit")
+            cmd_list.append("    network-topology")
+            cmd_list.append("        ue-set name ue-set1")
             for a in lt.apns:
-                logger.debug("            pdn apn %s type %s" % (a.name, a.type))
-                logger.debug("                location-reporting tai")
-                logger.debug("                location-reporting cgid")
-                logger.debug("        #exit")
-            logger.debug("            count %s" % l.call_model.count)
-            logger.debug("            initial-imsi %s%s%s00001" % (lt.mcc, lt.mnc, l.imsi_fill))
-            logger.debug("            initial-imei 999991546123451")
-            logger.debug("            kasme 34595956959")
-            logger.debug("        #exit")
-            logger.debug("        hss-service name hss-1")
+                cmd_list.append("            pdn apn %s type %s" % (a.name, a.type))
+                cmd_list.append("                location-reporting tai")
+                cmd_list.append("                location-reporting cgid")
+                cmd_list.append("        #exit")
+            cmd_list.append("            count %s" % l.call_model.count)
+            cmd_list.append("            initial-imsi %s%s%s00001" % (lt.mcc, lt.mnc, l.imsi_fill))
+            cmd_list.append("            initial-imei 999991546123451")
+            cmd_list.append("            kasme 34595956959")
+            cmd_list.append("        #exit")
+            cmd_list.append("        hss-service name hss-1")
             for a in lt.apns:
-                logger.debug("            pdn apn %s type %s" % (a.name, a.type))
-                logger.debug("                qci %s" % (a.qci))
-                logger.debug("                arp %s" % (a.arp))
-                logger.debug("                pre-emption-capability %s" % (a.pec))
-                logger.debug("            #exit")
-            logger.debug("        #exit")
-            logger.debug("        enodeb-set name enb-1")
-            logger.debug("            global-type macro")
-            logger.debug("            count 1")
-            logger.debug("            initial-id %s000 mcc %s mnc %s" % (l.imsi_fill, lt.mcc, lt.mnc))
-            logger.debug("            supported-tai mcc %s mnc %s initial-tac %s count 1 shared-count 1" % (lt.mcc, lt.mnc, lt.tac))
-            logger.debug("            supported-cgid mcc %s mnc %s initial-cgid 1 count 1 shared-count 0" % (lt.mcc, lt.mnc))
-            logger.debug("        #exit")
-            logger.debug("        mme-set name mme-1")
-            logger.debug("            count 1")
-            logger.debug("            associate tai-mgmt-db tai-db-1")
-            logger.debug("            policy tau set-ue-time enable")
-            logger.debug("            policy network dual-addressing-supported")
-            logger.debug("            enodeb-set enb-1")
-            logger.debug("            hss-service hss-1")
-            logger.debug("        #exit")
-            logger.debug("        sgw-set name sgw-1")
-            logger.debug("            count 1")
-            logger.debug("            plmn mcc %s mnc %s" % (lt.mcc, lt.mnc))
-            logger.debug("            s5")
-            logger.debug("                source ipv4-network %s port 2123" % l.control_plane.local_ipv4_addr)
-            logger.debug("                destination ipv4-address %s port 2123" % l.control_plane.remote_ipv4_addr.ip)
-            logger.debug("            #exit")
-            logger.debug("            s5u")
-            logger.debug("                source ipv4-network %s port 2152" % l.data_plane.local_ipv4_addr)
-            logger.debug("            #exit")
-            logger.debug("            bind")
-            logger.debug("        #exit")
-            logger.debug("        hsgw-set name hsgw-1")
-            logger.debug("            count 1")
-            logger.debug("            initial-id 1")
-            logger.debug("            plmn mcc %s mnc %s" % (lt.mcc, lt.mnc))
-            logger.debug("            nai-realm nai.epc.mnc0%s.mcc%s.3gppnetwork.org" % (lt.mnc, lt.mcc))
-            logger.debug("            s2a")
-            logger.debug("                source ipv6-network %s" % l.control_plane.local_ipv6_addr)
-            logger.debug("                destination ipv6-address %s" % l.control_plane.remote_ipv6_addr.ip)
-            logger.debug("            #exit")
-            logger.debug("            s2au")
-            logger.debug("                source ipv6-network %s" % l.data_plane.local_ipv6_addr)
-            logger.debug("            #exit")
-            logger.debug("            bind")
-            logger.debug("        #exit")
-            logger.debug("    #exit")
-            logger.debug("    traffic-model name tm-1")
-            logger.debug("        tun-interface name %s" % l.tunnel_dev)
-            logger.debug("        local ip address 1.1.1.1")
-            logger.debug("        local ipv6 address 1111::1.1.1.1")
-            logger.debug("        remote ip network %s" % c_ref.dst_ipv4_addr)
-            logger.debug("        remote ipv6 network %s" % c_ref.dst_ipv6_addr)
-            logger.debug("        #exit")
-            logger.debug("    #exit")
+                cmd_list.append("            pdn apn %s type %s" % (a.name, a.type))
+                cmd_list.append("                qci %s" % (a.qci))
+                cmd_list.append("                arp %s" % (a.arp))
+                cmd_list.append("                pre-emption-capability %s" % (a.pec))
+                cmd_list.append("            #exit")
+            cmd_list.append("        #exit")
+            cmd_list.append("        enodeb-set name enb-1")
+            cmd_list.append("            global-type macro")
+            cmd_list.append("            count 1")
+            cmd_list.append("            initial-id %s000 mcc %s mnc %s" % (l.imsi_fill, lt.mcc, lt.mnc))
+            cmd_list.append("            supported-tai mcc %s mnc %s initial-tac %s count 1 shared-count 1" % (lt.mcc, lt.mnc, lt.tac))
+            cmd_list.append("            supported-cgid mcc %s mnc %s initial-cgid 1 count 1 shared-count 0" % (lt.mcc, lt.mnc))
+            cmd_list.append("        #exit")
+            cmd_list.append("        mme-set name mme-1")
+            cmd_list.append("            count 1")
+            cmd_list.append("            associate tai-mgmt-db tai-db-1")
+            cmd_list.append("            policy tau set-ue-time enable")
+            cmd_list.append("            policy network dual-addressing-supported")
+            cmd_list.append("            enodeb-set enb-1")
+            cmd_list.append("            hss-service hss-1")
+            cmd_list.append("        #exit")
+            cmd_list.append("        sgw-set name sgw-1")
+            cmd_list.append("            count 1")
+            cmd_list.append("            plmn mcc %s mnc %s" % (lt.mcc, lt.mnc))
+            cmd_list.append("            s5")
+            cmd_list.append("                source ipv4-network %s port 2123" % l.control_plane.local_ipv4_addr)
+            cmd_list.append("                destination ipv4-address %s port 2123" % l.control_plane.remote_ipv4_addr.ip)
+            cmd_list.append("            #exit")
+            cmd_list.append("            s5u")
+            cmd_list.append("                source ipv4-network %s port 2152" % l.data_plane.local_ipv4_addr)
+            cmd_list.append("            #exit")
+            cmd_list.append("            bind")
+            cmd_list.append("        #exit")
+            cmd_list.append("        hsgw-set name hsgw-1")
+            cmd_list.append("            count 1")
+            cmd_list.append("            initial-id 1")
+            cmd_list.append("            plmn mcc %s mnc %s" % (lt.mcc, lt.mnc))
+            cmd_list.append("            nai-realm nai.epc.mnc0%s.mcc%s.3gppnetwork.org" % (lt.mnc, lt.mcc))
+            cmd_list.append("            s2a")
+            cmd_list.append("                source ipv6-network %s" % l.control_plane.local_ipv6_addr)
+            cmd_list.append("                destination ipv6-address %s" % l.control_plane.remote_ipv6_addr.ip)
+            cmd_list.append("            #exit")
+            cmd_list.append("            s2au")
+            cmd_list.append("                source ipv6-network %s" % l.data_plane.local_ipv6_addr)
+            cmd_list.append("            #exit")
+            cmd_list.append("            bind")
+            cmd_list.append("        #exit")
+            cmd_list.append("    #exit")
+            cmd_list.append("    traffic-model name tm-1")
+            cmd_list.append("        tun-interface name %s" % l.tunnel_dev)
+            cmd_list.append("        local ip address 1.1.1.1")
+            cmd_list.append("        local ipv6 address 1111::1.1.1.1")
+            cmd_list.append("        remote ip network %s/32" % c_ref.dst_ipv4_addr)
+            cmd_list.append("        remote ipv6 network %s/128" % c_ref.dst_ipv6_addr)
+            cmd_list.append("        #exit")
+            cmd_list.append("    #exit")
             opts = { }
             opts["initial_delay"] = l.call_model.initial_delay
             opts["delay"] = l.call_model.delay
-            l.call_model.CallEventSequence(lt.apns, **opts)
-            logger.debug("    call-model name %s" % l.call_model.name)
-            logger.debug("        ue-set ue-set1")
-            logger.debug("        call-event-sequence %s" % l.call_model.name)
-            logger.debug("        call-make rate %s" % l.call_model.make_rate)
-            logger.debug("        call-break rate %s" % l.call_model.break_rate)
-            logger.debug("        traffic-model tm-1")
-            logger.debug("    #exit")
-            logger.debug("end")
+            l.call_model.CallEventSequence(cmd_list, lt.apns, **opts)
+            cmd_list.append("    call-model name %s" % l.call_model.name)
+            cmd_list.append("        ue-set ue-set1")
+            cmd_list.append("        call-event-sequence %s" % l.call_model.name)
+            cmd_list.append("        call-make rate %s" % l.call_model.make_rate)
+            cmd_list.append("        call-break rate %s" % l.call_model.break_rate)
+            cmd_list.append("        traffic-model tm-1")
+            cmd_list.append("    #exit")
+            cmd_list.append("end")
+            cmd_list2 = [ ]
+            cmd_list2.append("echo > %s" % c_ref.cg_handler.user_config)
+            for c in cmd_list:
+                cmd_list2.append("echo \"%s\" >> %s" % (c, c_ref.cg_handler.user_config))
+            #self.conn.Run(cmd_list2)
 
 
 
@@ -358,7 +378,7 @@ class ToolParser(object):
                 cgh.clp = 65500 - (i * 3)
                 cgh.affinity = int(aff) + i
                 # This will need to be passed 
-                cgh.user_config = "/localdisk/master_files/lattice%s_%s.cfg" % (id, i)
+                cgh.user_config = "%s/lattice%s_%s.cfg" % (master.support_lps_dir, id, i)
                 stargen.cg_handler = cgh
                 master.clients.append(stargen)
             elif type == "server":
