@@ -30,7 +30,7 @@ class Master(object):
         self.callgenerators = [ ]
         self.lte_networks = [ ]
         self.lte_networks_by_name = { }
-        self.masterfile = "/localdisk/master_files/master_0.cfg"
+        self.masterfile = "/localdisk/master_files/%s.cfg" % self.name
         self.support_lps_dir = "/localdisk/master_files/lps_configs"
         self.conn = Connect("anchor1-vm1.mitg-tew01.cisco.com", "root", "starent")
         if self.conn.Open():
@@ -62,7 +62,7 @@ class Master(object):
                 assert False
             tm = self.traffic_models_by_name[c.tm_handler]
             gen = "%sGen" % tm.protocol
-            out = "create_client {%s handle %s affinity %s vr %s callgen_type %s clp %s cli %s af %s user_config %s call_model %s stargen_generator %s rsa %s rv6sa %s dst_port %s txrate 1 xml_file %s}" % (c.host, c.handle, c.affinity, c.vr, c.cg_handler.type, c.cg_handler.clp, c.cg_handler.cli, c.cg_handler.affinity, c.cg_handler.user_config, c_ref.call_model.name, gen, c.dst_ipv4_addr, c.dst_ipv6_addr, tm.dst_port, tm.descriptor)
+            out = "create_client {%s handle %s affinity %s vr %s callgen_type %s clp %s cli %s af %s user_config %s call_model %s stargen_generator %s rsa %s rv6sa %s dst_port %s txrate 1 %s xml_file %s}" % (c.host, c.handle, c.affinity, c.vr, c.cg_handler.type, c.cg_handler.clp, c.cg_handler.cli, c.cg_handler.affinity, c.cg_handler.user_config, c_ref.call_model.name, gen, c.dst_ipv4_addr, c.dst_ipv6_addr, tm.dst_port, tm.data_version, tm.descriptor)
             logger.debug(out)
             cmd_string = "echo %s >> %s" % (out, self.masterfile)
             self.conn.Run([cmd_string])
@@ -182,7 +182,7 @@ class Master(object):
             cmd_list2.append("echo > %s" % c_ref.cg_handler.user_config)
             for c in cmd_list:
                 cmd_list2.append("echo \"%s\" >> %s" % (c, c_ref.cg_handler.user_config))
-            #self.conn.Run(cmd_list2)
+            self.conn.Run(cmd_list2)
 
 
 
@@ -279,17 +279,13 @@ class ToolParser(object):
             lattice.control_plane.local_ipv6_addr = netaddr.IPNetwork(cl_ipv6)
             lattice.control_plane.local_ipv6_addr.__iadd__(i)
             lattice.control_plane.remote_ipv4_addr = netaddr.IPNetwork(cr_ipv4)
-            lattice.control_plane.remote_ipv4_addr.__iadd__(i)
             lattice.control_plane.remote_ipv6_addr = netaddr.IPNetwork(cr_ipv6)
-            lattice.control_plane.remote_ipv6_addr.__iadd__(i)
             lattice.data_plane.local_ipv4_addr = netaddr.IPNetwork(dl_ipv4)
             lattice.data_plane.local_ipv4_addr.__iadd__(i)
             lattice.data_plane.local_ipv6_addr = netaddr.IPNetwork(dl_ipv6)
             lattice.data_plane.local_ipv6_addr.__iadd__(i)
             lattice.data_plane.remote_ipv4_addr = netaddr.IPNetwork(dr_ipv4)
-            lattice.data_plane.remote_ipv4_addr.__iadd__(i)
             lattice.data_plane.remote_ipv6_addr = netaddr.IPNetwork(dr_ipv6)
-            lattice.data_plane.remote_ipv6_addr.__iadd__(i)
             cm = CallModel(cname)
             cm.count = count
             cm.make_rate = mr
@@ -405,9 +401,9 @@ class ToolParser(object):
         tm.dst_port = port
         tm.descriptor = desc
         if vers == "ipv4":
-            tm.data_version = "data_tx_ipv4"
+            tm.data_version = "data_tx_ipv4 \\\"yes\\\""
         elif vers == "ipv6":
-            tm.data_version = "data_tx_ipv6"
+            tm.data_version = "data_tx_ipv6 \\\"yes\\\""
         master.traffic_models.append(tm)
         master.traffic_models_by_name[name] =  tm
 
@@ -417,7 +413,7 @@ class ToolParser(object):
         assert root_tag.tag == "tools"
         assert 'name' in root_tag.attrib.keys()
         name = root_tag.attrib['name']
-        master = Master("Suite3")
+        master = Master(name)
         for next_tag in root_tag:
             if next_tag.tag == "stargen":
                 self.__AddStargens(next_tag, master)

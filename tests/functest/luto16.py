@@ -4,8 +4,8 @@ from evolver.evolve import *
 
 def setup():
     try:
-        if os.path.exists("/tmp/evolve_suite3.log"):
-            os.remove("/tmp/evolve_suite3.log")
+        if os.path.exists("/tmp/evolve_luto16.log"):
+            os.remove("/tmp/evolve_luto16.log")
     except:
         raise
 
@@ -18,8 +18,8 @@ def teardown():
 def test_1():
     """Run Test 1"""
     try:
-        Logger("extensive", "/tmp/evolve_suite3.log")
-        xml_file = open("tests/functest/suite3.xml", "r")
+        Logger("extensive", "/tmp/evolve_luto16.log")
+        xml_file = open("tests/functest/luto16.xml", "r")
         p = ToolParser(xml_file)
         master = p.ParseXml()
         master.CreateServers()

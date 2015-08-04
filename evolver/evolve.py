@@ -494,6 +494,10 @@ class Parser(object):
             assert 'vlan' in next_tag.attrib.keys()
             c = Connectivity()
             c.vlan = next_tag.attrib['vlan']
+            if 'mtu_a' in next_tag.attrib.keys():
+                c.mtu_a = next_tag.attrib['mtu_a']
+            if 'mtu_b' in next_tag.attrib.keys():
+                c.mtu_b = next_tag.attrib['mtu_b']
             if 'port_channel' in next_tag.attrib.keys():
                 c.port_channel = next_tag.attrib['port_channel']
             for sub_tag in next_tag:
@@ -1057,15 +1061,17 @@ class Network(object):
      def AddIpv4(self, addr, offset=0):
         self.ipv4 = netaddr.IPNetwork(addr)
         logger.debug("IP: %s" % self.ipv4.ip)
-        offset <<= (32 - self.ipv4.prefixlen)
-        self.ipv4.ip.__iadd__(offset)
-        logger.debug("IP: %s, offset: %s" % (self.ipv4.ip, offset))
+        if offset:
+            #offset <<= (32 - self.ipv4.prefixlen)
+            self.ipv4.__iadd__(offset)
+            logger.debug("IP: %s, offset: %s" % (self.ipv4.ip, offset))
  
      def AddIpv6(self, addr, offset=0):
         self.ipv6 = netaddr.IPNetwork(addr)
-        offset <<= (128 - self.ipv6.prefixlen)
-        self.ipv6.ip.__iadd__(offset)
-        logger.debug("IP: %s, offset: %s" % (self.ipv6.ip, offset))
+        if offset:
+            #offset <<= (128 - self.ipv6.prefixlen)
+            self.ipv6.__iadd__(offset)
+            logger.debug("IP: %s, offset: %s" % (self.ipv6.ip, offset))
 
      def Display(self):
         if self.ipv4:
@@ -1080,6 +1086,8 @@ class Connectivity(object):
 
     def __init__(self):
         self.vlan = None
+        self.mtu_a = None
+        self.mtu_b = None
         self.port_channel = None
         self.networks = [ ]
         net_a = Network()

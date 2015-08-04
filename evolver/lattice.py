@@ -61,6 +61,12 @@ class CallModel(object):
         elif self.name == "vzw-sgw-make-break-1":
             logger.debug("Call Sequence not implemented")
             assert False
+        elif self.name == "vzw-sgw-static-2":
+            assert len(apns) == 2
+            cmd_list.append("    call-event-sequence name %s" % self.name)
+            cmd_list.append("        initial-attach lte sgw-set sgw-1 apn %s" % apns[0].name)
+            cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
+            cmd_list.append("    #exit")
         elif self.name == "vzw-sgw-make-break-2":
             assert len(apns) == 2
             cmd_list.append("    call-event-sequence name %s" % self.name)
@@ -68,11 +74,26 @@ class CallModel(object):
             cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
             cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
             cmd_list.append("        break-call delay 1")
+            cmd_list.append("        iterate-count unlimited")
+            cmd_list.append("        make-call apn %s delay 1" % apns[0].name)
+            cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
+            cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
+            cmd_list.append("        break-call delay 1")
             cmd_list.append("    #exit")
+        elif self.name == "vzw-hsgw-static-2":
+            assert len(apns) == 2
+            cmd_list.append("    call-event-sequence name %s" % self.name)
+            cmd_list.append("        initial-attach ehrpd hsgw-set hsgw-1 apn %s" % apns[0].name)
+            cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
         elif self.name == "vzw-hsgw-make-break-2":
             assert len(apns) == 2
             cmd_list.append("    call-event-sequence name %s" % self.name)
             cmd_list.append("        initial-attach ehrpd hsgw-set hsgw-1 apn %s" % apns[0].name)
+            cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
+            cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
+            cmd_list.append("        break-call delay 1")
+            cmd_list.append("        iterate-count unlimited")
+            cmd_list.append("        make-call apn %s delay 1" % apns[0].name)
             cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
             cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
             cmd_list.append("        break-call delay 1")
