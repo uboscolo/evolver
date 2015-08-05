@@ -494,10 +494,14 @@ class Parser(object):
             assert 'vlan' in next_tag.attrib.keys()
             c = Connectivity()
             c.vlan = next_tag.attrib['vlan']
+            mtu_a = None
+            mtu_b = None
             if 'mtu_a' in next_tag.attrib.keys():
-                c.mtu_a = next_tag.attrib['mtu_a']
+                mtu_a = next_tag.attrib['mtu_a']
             if 'mtu_b' in next_tag.attrib.keys():
-                c.mtu_b = next_tag.attrib['mtu_b']
+                mtu_b = next_tag.attrib['mtu_b']
+            c.mtus.append(mtu_a)
+            c.mtus.append(mtu_b)
             if 'port_channel' in next_tag.attrib.keys():
                 c.port_channel = next_tag.attrib['port_channel']
             for sub_tag in next_tag:
@@ -664,7 +668,8 @@ class Link(object):
             node = self.nodes[i]
             intf = self.interfaces[i]
             net = conn.networks[i]
-            intf.AddLink(node, conn, net)
+            mtu = conn.mtus[i]
+            intf.AddLink(node, conn, net, mtu)
             intf.AddConnectivity(node, conn, net)
 
     def CheckConnectivity(self):
@@ -694,6 +699,7 @@ class Interface(object):
     def __init__(self, name, bandwidth):
         self.name = name
         self.bandwidth = bandwidth
+        self.mtu = None
         self.networks = [ ]
         self.verify_only = True
 
@@ -701,7 +707,7 @@ class Interface(object):
         logger.error("Method not implemented")
         assert False
 
-    def AddLink(self, node, conn, net):
+    def AddLink(self, node, conn, net, mtu=None):
         logger.error("Method not implemented")
         assert False
 
@@ -728,7 +734,7 @@ class LinuxInterface(Interface):
                 net.ipv6.ip, net.ipv6.prefixlen, self.name, conn.vlan)
             r = c.Run([cmd_string])
 
-    def AddLink(self, node, conn, net):
+    def AddLink(self, node, conn, net, mtu=None):
         logger.debug("Adding link %s.%s" % (self.name, conn.vlan))
         link_exists = self.VerifyLink(node, conn, net)
         if self.verify_only: 
@@ -752,6 +758,9 @@ class LinuxInterface(Interface):
             r = c.Run([cmd_string])
             cmd_string = "setvr %s ip link set dev %s.%s up" % (net.vr, self.name, conn.vlan)
             r = c.Run([cmd_string])
+            if mtu:
+                cmd_string = "setvr %s ip link set dev %s.%s mtu %s" % (net.vr, self.name, conn.vlan, mtu)
+                r = c.Run([cmd_string])
 
     def Bringup(self, c):
         logger.debug("Verifying if device %s is up" % self.name)
@@ -887,7 +896,7 @@ class SwitchInterface(Interface):
             cmd_string = "end"
             r = c.Run([cmd_string])
 
-    def AddLink(self, node, conn, net):
+    def AddLink(self, node, conn, net, mtu=None):
         link_exists = self.VerifyLink(node, conn, net)
         if self.verify_only: 
             if not link_exists:
@@ -1009,7 +1018,7 @@ class StarOsInterface(Interface):
     def __init__(self, name, bandwidth):
         super(StarOsInterface, self).__init__(name, bandwidth)
 
-    def AddLink(self, node, conn, net):
+    def AddLink(self, node, conn, net, mtu=None):
         logger.debug("Checking if link exists %s" % self.name)
         if conn.port_channel and not (net.ipv4 or net.ipv6):
             logger.debug("Secondary member of a port channel")
@@ -1086,8 +1095,7 @@ class Connectivity(object):
 
     def __init__(self):
         self.vlan = None
-        self.mtu_a = None
-        self.mtu_b = None
+        self.mtus = [ ]
         self.port_channel = None
         self.networks = [ ]
         net_a = Network()

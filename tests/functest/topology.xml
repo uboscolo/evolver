@@ -6,7 +6,31 @@
     <device name="luto3" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
+    <device name="luto4" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
+    <device name="luto5" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
+    <device name="luto6" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
+    <device name="luto7" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
     <device name="luto16" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
+    <device name="luto17" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
+    <device name="luto18" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
+    <device name="luto19" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
+    <device name="luto20" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
     <device name="evo1" domain="mitg-tew01.cisco.com" type="staros">
@@ -442,6 +466,118 @@
             <network ipv4_a="172.20.195.129/24" ipv6_a="fd00:0004:00c3::c1/64" vr_a="sgi-1" ipv4_b="172.20.195.1/24" ipv6_b="fd00:0004:00c3::1/64" vr_b="24"/>
         </connectivity>
     </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/27" node_b="luto4" interface_b="eth2">
+        <connectivity vlan="1004">
+            <network ipv4_a="172.18.4.129/24" ipv6_a="fd00:0002:0004::81/64" vr_a="s5-1" ipv4_b="172.18.4.1/24" ipv6_b="fd00:0002:0004::1/64" vr_b="1"/>
+        </connectivity>
+        <connectivity vlan="1068">
+            <network ipv4_a="172.18.68.129/24" ipv6_a="fd00:0002:0044::81/64" vr_a="s5-1" ipv4_b="172.18.68.1/24" ipv6_b="fd00:0002:0044::1/64" vr_b="2"/>
+        </connectivity>
+        <connectivity vlan="2004" mtu_b="1280">
+            <network ipv4_a="172.20.4.129/24" ipv6_a="fd00:0004:0004::81/64" vr_a="sgi-1" ipv4_b="172.20.4.1/24" ipv6_b="fd00:0004:0004::1/64" vr_b="21"/>
+        </connectivity>
+        <connectivity vlan="2068" mtu_b="1280">
+            <network ipv4_a="172.20.68.129/24" ipv6_a="fd00:0004:0044::81/64" vr_a="sgi-1" ipv4_b="172.20.68.1/24" ipv6_b="fd00:0004:0044::1/64" vr_b="22"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/28" node_b="luto4" interface_b="eth3">
+        <connectivity vlan="1132">
+            <network ipv4_a="172.18.132.129/24" ipv6_a="fd00:0002:0084::81/64" vr_a="s5-1" ipv4_b="172.18.132.1/24" ipv6_b="fd00:0002:0084::1/64" vr_b="3"/>
+        </connectivity>
+        <connectivity vlan="1196">
+            <network ipv4_a="172.18.196.129/24" ipv6_a="fd00:0002:00c4::c1/64" vr_a="s5-1" ipv4_b="172.18.196.1/24" ipv6_b="fd00:0002:00c4::1/64" vr_b="4"/>
+        </connectivity>
+        <connectivity vlan="2132" mtu_b="1280">
+            <network ipv4_a="172.20.132.129/24" ipv6_a="fd00:0004:0084::81/64" vr_a="sgi-1" ipv4_b="172.20.132.1/24" ipv6_b="fd00:0004:0084::1/64" vr_b="23"/>
+        </connectivity>
+        <connectivity vlan="2196" mtu_b="1280">
+            <network ipv4_a="172.20.196.129/24" ipv6_a="fd00:0004:00c4::c1/64" vr_a="sgi-1" ipv4_b="172.20.196.1/24" ipv6_b="fd00:0004:00c4::1/64" vr_b="24"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/29" node_b="luto5" interface_b="eth2">
+        <connectivity vlan="1005">
+            <network ipv4_a="172.18.5.129/24" ipv6_a="fd00:0002:0005::81/64" vr_a="s5-1" ipv4_b="172.18.5.1/24" ipv6_b="fd00:0002:0005::1/64" vr_b="1"/>
+        </connectivity>
+        <connectivity vlan="1069">
+            <network ipv4_a="172.18.69.129/24" ipv6_a="fd00:0002:0045::81/64" vr_a="s5-1" ipv4_b="172.18.69.1/24" ipv6_b="fd00:0002:0045::1/64" vr_b="2"/>
+        </connectivity>
+        <connectivity vlan="2005" mtu_b="1280">
+            <network ipv4_a="172.20.5.129/24" ipv6_a="fd00:0004:0005::81/64" vr_a="sgi-1" ipv4_b="172.20.5.1/24" ipv6_b="fd00:0004:0005::1/64" vr_b="21"/>
+        </connectivity>
+        <connectivity vlan="2069" mtu_b="1280">
+            <network ipv4_a="172.20.69.129/24" ipv6_a="fd00:0004:0045::81/64" vr_a="sgi-1" ipv4_b="172.20.69.1/24" ipv6_b="fd00:0004:0045::1/64" vr_b="22"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/30" node_b="luto5" interface_b="eth3">
+        <connectivity vlan="1133">
+            <network ipv4_a="172.18.133.129/24" ipv6_a="fd00:0002:0085::81/64" vr_a="s5-1" ipv4_b="172.18.133.1/24" ipv6_b="fd00:0002:0085::1/64" vr_b="3"/>
+        </connectivity>
+        <connectivity vlan="1197">
+            <network ipv4_a="172.18.197.129/24" ipv6_a="fd00:0002:00c5::c1/64" vr_a="s5-1" ipv4_b="172.18.197.1/24" ipv6_b="fd00:0002:00c5::1/64" vr_b="4"/>
+        </connectivity>
+        <connectivity vlan="2133" mtu_b="1280">
+            <network ipv4_a="172.20.133.129/24" ipv6_a="fd00:0004:0085::81/64" vr_a="sgi-1" ipv4_b="172.20.133.1/24" ipv6_b="fd00:0004:0085::1/64" vr_b="23"/>
+        </connectivity>
+        <connectivity vlan="2197" mtu_b="1280">
+            <network ipv4_a="172.20.197.129/24" ipv6_a="fd00:0004:00c5::c1/64" vr_a="sgi-1" ipv4_b="172.20.197.1/24" ipv6_b="fd00:0004:00c5::1/64" vr_b="24"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/31" node_b="luto6" interface_b="eth6">
+        <connectivity vlan="1006">
+            <network ipv4_a="172.18.6.129/24" ipv6_a="fd00:0002:0006::81/64" vr_a="s5-1" ipv4_b="172.18.6.1/24" ipv6_b="fd00:0002:0006::1/64" vr_b="1"/>
+        </connectivity>
+        <connectivity vlan="1070">
+            <network ipv4_a="172.18.70.129/24" ipv6_a="fd00:0002:0046::81/64" vr_a="s5-1" ipv4_b="172.18.70.1/24" ipv6_b="fd00:0002:0046::1/64" vr_b="2"/>
+        </connectivity>
+        <connectivity vlan="2006" mtu_b="1280">
+            <network ipv4_a="172.20.6.129/24" ipv6_a="fd00:0004:0006::81/64" vr_a="sgi-1" ipv4_b="172.20.6.1/24" ipv6_b="fd00:0004:0006::1/64" vr_b="21"/>
+        </connectivity>
+        <connectivity vlan="2070" mtu_b="1280">
+            <network ipv4_a="172.20.70.129/24" ipv6_a="fd00:0004:0046::81/64" vr_a="sgi-1" ipv4_b="172.20.70.1/24" ipv6_b="fd00:0004:0046::1/64" vr_b="22"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/32" node_b="luto6" interface_b="eth7">
+        <connectivity vlan="1134">
+            <network ipv4_a="172.18.134.129/24" ipv6_a="fd00:0002:0086::81/64" vr_a="s5-1" ipv4_b="172.18.134.1/24" ipv6_b="fd00:0002:0086::1/64" vr_b="3"/>
+        </connectivity>
+        <connectivity vlan="1198">
+            <network ipv4_a="172.18.198.129/24" ipv6_a="fd00:0002:00c6::c1/64" vr_a="s5-1" ipv4_b="172.18.198.1/24" ipv6_b="fd00:0002:00c6::1/64" vr_b="4"/>
+        </connectivity>
+        <connectivity vlan="2134" mtu_b="1280">
+            <network ipv4_a="172.20.134.129/24" ipv6_a="fd00:0004:0086::81/64" vr_a="sgi-1" ipv4_b="172.20.134.1/24" ipv6_b="fd00:0004:0086::1/64" vr_b="23"/>
+        </connectivity>
+        <connectivity vlan="2198" mtu_b="1280">
+            <network ipv4_a="172.20.198.129/24" ipv6_a="fd00:0004:00c6::c1/64" vr_a="sgi-1" ipv4_b="172.20.198.1/24" ipv6_b="fd00:0004:00c6::1/64" vr_b="24"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/33" node_b="luto7" interface_b="eth6">
+        <connectivity vlan="1007">
+            <network ipv4_a="172.18.7.129/24" ipv6_a="fd00:0002:0007::81/64" vr_a="s5-1" ipv4_b="172.18.7.1/24" ipv6_b="fd00:0002:0007::1/64" vr_b="1"/>
+        </connectivity>
+        <connectivity vlan="1071">
+            <network ipv4_a="172.18.71.129/24" ipv6_a="fd00:0002:0047::81/64" vr_a="s5-1" ipv4_b="172.18.71.1/24" ipv6_b="fd00:0002:0047::1/64" vr_b="2"/>
+        </connectivity>
+        <connectivity vlan="2007" mtu_b="1280">
+            <network ipv4_a="172.20.7.129/24" ipv6_a="fd00:0004:0007::81/64" vr_a="sgi-1" ipv4_b="172.20.7.1/24" ipv6_b="fd00:0004:0007::1/64" vr_b="21"/>
+        </connectivity>
+        <connectivity vlan="2071" mtu_b="1280">
+            <network ipv4_a="172.20.71.129/24" ipv6_a="fd00:0004:0047::81/64" vr_a="sgi-1" ipv4_b="172.20.71.1/24" ipv6_b="fd00:0004:0047::1/64" vr_b="22"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/34" node_b="luto7" interface_b="eth7">
+        <connectivity vlan="1135">
+            <network ipv4_a="172.18.135.129/24" ipv6_a="fd00:0002:0087::81/64" vr_a="s5-1" ipv4_b="172.18.135.1/24" ipv6_b="fd00:0002:0087::1/64" vr_b="3"/>
+        </connectivity>
+        <connectivity vlan="1199">
+            <network ipv4_a="172.18.199.129/24" ipv6_a="fd00:0002:00c7::c1/64" vr_a="s5-1" ipv4_b="172.18.199.1/24" ipv6_b="fd00:0002:00c7::1/64" vr_b="4"/>
+        </connectivity>
+        <connectivity vlan="2135" mtu_b="1280">
+            <network ipv4_a="172.20.135.129/24" ipv6_a="fd00:0004:0087::81/64" vr_a="sgi-1" ipv4_b="172.20.135.1/24" ipv6_b="fd00:0004:0087::1/64" vr_b="23"/>
+        </connectivity>
+        <connectivity vlan="2198" mtu_b="1280">
+            <network ipv4_a="172.20.199.129/24" ipv6_a="fd00:0004:00c7::c1/64" vr_a="sgi-1" ipv4_b="172.20.199.1/24" ipv6_b="fd00:0004:00c7::1/64" vr_b="24"/>
+        </connectivity>
+    </link>
     <link bandwidth="10G" node_a="evo-sw2" interface_a="1/21" node_b="luto16" interface_b="eth6">
         <connectivity vlan="1016">
             <network ipv4_a="172.18.16.129/24" ipv6_a="fd00:0002:0010::81/64" vr_a="s5-1" ipv4_b="172.18.16.1/24" ipv6_b="fd00:0002:0010::1/64" vr_b="1"/>
@@ -468,6 +604,118 @@
         </connectivity>
         <connectivity vlan="2208" mtu_b="1280">
             <network ipv4_a="172.20.208.129/24" ipv6_a="fd00:0004:00d0::c1/64" vr_a="sgi-1" ipv4_b="172.20.208.1/24" ipv6_b="fd00:0004:00d0::1/64" vr_b="24"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw2" interface_a="1/23" node_b="luto17" interface_b="eth6">
+        <connectivity vlan="1017">
+            <network ipv4_a="172.18.17.129/24" ipv6_a="fd00:0002:0011::81/64" vr_a="s5-1" ipv4_b="172.18.17.1/24" ipv6_b="fd00:0002:0011::1/64" vr_b="1"/>
+        </connectivity>
+        <connectivity vlan="1081">
+            <network ipv4_a="172.18.81.129/24" ipv6_a="fd00:0002:0051::81/64" vr_a="s5-1" ipv4_b="172.18.81.1/24" ipv6_b="fd00:0002:0051::1/64" vr_b="2"/>
+        </connectivity>
+        <connectivity vlan="2017" mtu_b="1280">
+            <network ipv4_a="172.20.17.129/24" ipv6_a="fd00:0004:0011::81/64" vr_a="sgi-1" ipv4_b="172.20.17.1/24" ipv6_b="fd00:0004:0011::1/64" vr_b="21"/>
+        </connectivity>
+        <connectivity vlan="2081" mtu_b="1280">
+            <network ipv4_a="172.20.81.129/24" ipv6_a="fd00:0004:0051::81/64" vr_a="sgi-1" ipv4_b="172.20.81.1/24" ipv6_b="fd00:0004:0051::1/64" vr_b="22"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw2" interface_a="1/24" node_b="luto17" interface_b="eth7">
+        <connectivity vlan="1145">
+            <network ipv4_a="172.18.145.129/24" ipv6_a="fd00:0002:0091::81/64" vr_a="s5-1" ipv4_b="172.18.145.1/24" ipv6_b="fd00:0002:0091::1/64" vr_b="3"/>
+        </connectivity>
+        <connectivity vlan="1209">
+            <network ipv4_a="172.18.209.129/24" ipv6_a="fd00:0002:00d1::c1/64" vr_a="s5-1" ipv4_b="172.18.209.1/24" ipv6_b="fd00:0002:00d1::1/64" vr_b="4"/>
+        </connectivity>
+        <connectivity vlan="2145" mtu_b="1280">
+            <network ipv4_a="172.20.145.129/24" ipv6_a="fd00:0004:0091::81/64" vr_a="sgi-1" ipv4_b="172.20.145.1/24" ipv6_b="fd00:0004:0091::1/64" vr_b="23"/>
+        </connectivity>
+        <connectivity vlan="2209" mtu_b="1280">
+            <network ipv4_a="172.20.209.129/24" ipv6_a="fd00:0004:00d1::c1/64" vr_a="sgi-1" ipv4_b="172.20.209.1/24" ipv6_b="fd00:0004:00d1::1/64" vr_b="24"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw2" interface_a="1/25" node_b="luto18" interface_b="eth6">
+        <connectivity vlan="1018">
+            <network ipv4_a="172.18.18.129/24" ipv6_a="fd00:0002:0012::81/64" vr_a="s5-1" ipv4_b="172.18.18.1/24" ipv6_b="fd00:0002:0012::1/64" vr_b="1"/>
+        </connectivity>
+        <connectivity vlan="1082">
+            <network ipv4_a="172.18.82.129/24" ipv6_a="fd00:0002:0052::81/64" vr_a="s5-1" ipv4_b="172.18.82.1/24" ipv6_b="fd00:0002:0052::1/64" vr_b="2"/>
+        </connectivity>
+        <connectivity vlan="2018" mtu_b="1280">
+            <network ipv4_a="172.20.18.129/24" ipv6_a="fd00:0004:0012::81/64" vr_a="sgi-1" ipv4_b="172.20.18.1/24" ipv6_b="fd00:0004:0012::1/64" vr_b="21"/>
+        </connectivity>
+        <connectivity vlan="2082" mtu_b="1280">
+            <network ipv4_a="172.20.82.129/24" ipv6_a="fd00:0004:0052::81/64" vr_a="sgi-1" ipv4_b="172.20.82.1/24" ipv6_b="fd00:0004:0052::1/64" vr_b="22"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw2" interface_a="1/26" node_b="luto18" interface_b="eth7">
+        <connectivity vlan="1146">
+            <network ipv4_a="172.18.146.129/24" ipv6_a="fd00:0002:0092::81/64" vr_a="s5-1" ipv4_b="172.18.146.1/24" ipv6_b="fd00:0002:0092::1/64" vr_b="3"/>
+        </connectivity>
+        <connectivity vlan="1210">
+            <network ipv4_a="172.18.210.129/24" ipv6_a="fd00:0002:00d2::c1/64" vr_a="s5-1" ipv4_b="172.18.210.1/24" ipv6_b="fd00:0002:00d2::1/64" vr_b="4"/>
+        </connectivity>
+        <connectivity vlan="2146" mtu_b="1280">
+            <network ipv4_a="172.20.146.129/24" ipv6_a="fd00:0004:0092::81/64" vr_a="sgi-1" ipv4_b="172.20.146.1/24" ipv6_b="fd00:0004:0092::1/64" vr_b="23"/>
+        </connectivity>
+        <connectivity vlan="2210" mtu_b="1280">
+            <network ipv4_a="172.20.210.129/24" ipv6_a="fd00:0004:00d2::c1/64" vr_a="sgi-1" ipv4_b="172.20.210.1/24" ipv6_b="fd00:0004:00d2::1/64" vr_b="24"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw2" interface_a="1/27" node_b="luto19" interface_b="eth6">
+        <connectivity vlan="1019">
+            <network ipv4_a="172.18.19.129/24" ipv6_a="fd00:0002:0013::81/64" vr_a="s5-1" ipv4_b="172.18.19.1/24" ipv6_b="fd00:0002:0013::1/64" vr_b="1"/>
+        </connectivity>
+        <connectivity vlan="1083">
+            <network ipv4_a="172.18.83.129/24" ipv6_a="fd00:0002:0053::81/64" vr_a="s5-1" ipv4_b="172.18.83.1/24" ipv6_b="fd00:0002:0053::1/64" vr_b="2"/>
+        </connectivity>
+        <connectivity vlan="2019" mtu_b="1280">
+            <network ipv4_a="172.20.19.129/24" ipv6_a="fd00:0004:0013::81/64" vr_a="sgi-1" ipv4_b="172.20.19.1/24" ipv6_b="fd00:0004:0013::1/64" vr_b="21"/>
+        </connectivity>
+        <connectivity vlan="2083" mtu_b="1280">
+            <network ipv4_a="172.20.83.129/24" ipv6_a="fd00:0004:0053::81/64" vr_a="sgi-1" ipv4_b="172.20.83.1/24" ipv6_b="fd00:0004:0053::1/64" vr_b="22"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw2" interface_a="1/28" node_b="luto19" interface_b="eth7">
+        <connectivity vlan="1147">
+            <network ipv4_a="172.18.147.129/24" ipv6_a="fd00:0002:0093::81/64" vr_a="s5-1" ipv4_b="172.18.147.1/24" ipv6_b="fd00:0002:0093::1/64" vr_b="3"/>
+        </connectivity>
+        <connectivity vlan="1211">
+            <network ipv4_a="172.18.211.129/24" ipv6_a="fd00:0002:00d3::c1/64" vr_a="s5-1" ipv4_b="172.18.211.1/24" ipv6_b="fd00:0002:00d3::1/64" vr_b="4"/>
+        </connectivity>
+        <connectivity vlan="2147" mtu_b="1280">
+            <network ipv4_a="172.20.147.129/24" ipv6_a="fd00:0004:0093::81/64" vr_a="sgi-1" ipv4_b="172.20.147.1/24" ipv6_b="fd00:0004:0093::1/64" vr_b="23"/>
+        </connectivity>
+        <connectivity vlan="2211" mtu_b="1280">
+            <network ipv4_a="172.20.211.129/24" ipv6_a="fd00:0004:00d3::c1/64" vr_a="sgi-1" ipv4_b="172.20.211.1/24" ipv6_b="fd00:0004:00d3::1/64" vr_b="24"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw2" interface_a="1/29" node_b="luto20" interface_b="eth6">
+        <connectivity vlan="1020">
+            <network ipv4_a="172.18.20.129/24" ipv6_a="fd00:0002:0014::81/64" vr_a="s5-1" ipv4_b="172.18.20.1/24" ipv6_b="fd00:0002:0014::1/64" vr_b="1"/>
+        </connectivity>
+        <connectivity vlan="1084">
+            <network ipv4_a="172.18.84.129/24" ipv6_a="fd00:0002:0054::81/64" vr_a="s5-1" ipv4_b="172.18.84.1/24" ipv6_b="fd00:0002:0054::1/64" vr_b="2"/>
+        </connectivity>
+        <connectivity vlan="2020" mtu_b="1280">
+            <network ipv4_a="172.20.20.129/24" ipv6_a="fd00:0004:0014::81/64" vr_a="sgi-1" ipv4_b="172.20.20.1/24" ipv6_b="fd00:0004:0014::1/64" vr_b="21"/>
+        </connectivity>
+        <connectivity vlan="2084" mtu_b="1280">
+            <network ipv4_a="172.20.84.129/24" ipv6_a="fd00:0004:0054::81/64" vr_a="sgi-1" ipv4_b="172.20.84.1/24" ipv6_b="fd00:0004:0054::1/64" vr_b="22"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw2" interface_a="1/30" node_b="luto20" interface_b="eth7">
+        <connectivity vlan="1148">
+            <network ipv4_a="172.18.148.129/24" ipv6_a="fd00:0002:0094::81/64" vr_a="s5-1" ipv4_b="172.18.148.1/24" ipv6_b="fd00:0002:0094::1/64" vr_b="3"/>
+        </connectivity>
+        <connectivity vlan="1212">
+            <network ipv4_a="172.18.212.129/24" ipv6_a="fd00:0002:00d4::c1/64" vr_a="s5-1" ipv4_b="172.18.212.1/24" ipv6_b="fd00:0002:00d4::1/64" vr_b="4"/>
+        </connectivity>
+        <connectivity vlan="2148" mtu_b="1280">
+            <network ipv4_a="172.20.148.129/24" ipv6_a="fd00:0004:0094::81/64" vr_a="sgi-1" ipv4_b="172.20.148.1/24" ipv6_b="fd00:0004:0094::1/64" vr_b="23"/>
+        </connectivity>
+        <connectivity vlan="2212" mtu_b="1280">
+            <network ipv4_a="172.20.212.129/24" ipv6_a="fd00:0004:00d4::c1/64" vr_a="sgi-1" ipv4_b="172.20.212.1/24" ipv6_b="fd00:0004:00d4::1/64" vr_b="24"/>
         </connectivity>
     </link>
     <route type="static" node_from="luto1" node_to="evo1" node_via="evo-sw1">
