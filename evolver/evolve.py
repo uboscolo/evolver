@@ -318,15 +318,11 @@ class Switch(Host):
                 if not if_num:
                     logger.error("Ran out of loopback interfaces (%s)" % i)
                     assert False
-                cmd_string = "configure terminal"
-                r = c.Run([cmd_string])
-                cmd_string = "interface loopback %s" % if_num
-                r = c.Run([cmd_string])
-                cmd_string = "vrf member %s" % vr
-                r = c.Run([cmd_string])
-                cmd_string = "ip address %s" % ip
-                r = c.Run([cmd_string])
-                cmd_string = "end"
+                cmd_string = "configure terminal\n"
+                cmd_string += "interface loopback %s\n" % if_num
+                cmd_string += "vrf member %s\n" % vr
+                cmd_string += "ip address %s\n" % ip
+                cmd_string += "end\n"
                 r = c.Run([cmd_string])
 
     def AddRoute(self, net_from, net_to, net_via, ver=4):
@@ -379,12 +375,12 @@ class Switch(Host):
             if not remote_net.ipv4 or remote_net.ipv4.ip == remote_net.ipv4.network:
                 logger.debug("No ipv4 network")
                 return False
-            cmd_string = "ping %s count 2 timeout 1 vrf %s source %s" % (remote_net.ipv4.ip, local_net.vr, local_net.ipv4.ip)
+            cmd_string = "ping %s count 2 timeout 2 vrf %s source %s" % (remote_net.ipv4.ip, local_net.vr, local_net.ipv4.ip)
         elif ver == 6:
             if not remote_net.ipv6 or remote_net.ipv6.ip == remote_net.ipv6.network:
                 logger.debug("No ipv4 network")
                 return False
-            cmd_string = "ping6 %s count 2 timeout 1 vrf %s" % (remote_net.ipv6.ip, local_net.vr)
+            cmd_string = "ping6 %s count 2 timeout 2 vrf %s" % (remote_net.ipv6.ip, local_net.vr)
         else:
             logger.error("Unexpected ip version %s" % ver)
             assert False
@@ -751,6 +747,7 @@ class LinuxInterface(Interface):
                     logger.debug("Device %s.%s does not exist, creating ..." % (self.name, conn.vlan))
                     cmd_string = "modprobe 8021q"
                     r = c.Run([cmd_string])
+                    break
             if link_exists:
                 cmd_string = "setvr %s vconfig rem %s.%s" % (net.vr, self.name, conn.vlan)
                 r = c.Run([cmd_string])
@@ -784,8 +781,8 @@ class LinuxInterface(Interface):
                     logger.debug("Device %s found and up (mtu: %s, qlen: %s)" % (self.name, mtu, qlen))
                 if self.bandwidth == "10G" and not qlen == "10000":
                     logger.warning("10Gb/s link (%s), it's preferable to set qlen to 10000, qlen %s" % (self.bandwidth, qlen))
-                    found = True
-                    break
+                found = True
+                break
         if not found:
             if not self.verify_only:
                 logger.debug("Bringing up link ...")
@@ -873,27 +870,18 @@ class SwitchInterface(Interface):
         c = node.conn
         self.networks.append(net)
         if not self.verify_only:
-            cmd_string = "configure terminal"
-            r = c.Run([cmd_string])
-            cmd_string = "vrf context %s" % net.vr
-            r = c.Run([cmd_string])
-            cmd_string = "exit"
-            r = c.Run([cmd_string])
-            cmd_string = "no interface vlan %s" % conn.vlan
-            r = c.Run([cmd_string])
-            cmd_string = "interface vlan %s" % conn.vlan
-            r = c.Run([cmd_string])
-            cmd_string = "no shutdown"
-            r = c.Run([cmd_string])
-            cmd_string = "vrf member %s" % net.vr 
-            r = c.Run([cmd_string])
+            cmd_string = "configure terminal\n"
+            cmd_string = "vrf context %s\n" % net.vr
+            cmd_string = "exit\n"
+            cmd_string = "no interface vlan %s\n" % conn.vlan
+            cmd_string = "interface vlan %s\n" % conn.vlan
+            cmd_string = "no shutdown\n"
+            cmd_string = "vrf member %s\n" % net.vr 
             if net.ipv4:
-                cmd_string = "ip address %s/%s" % (net.ipv4.ip, net.ipv4.prefixlen)
-                r = c.Run([cmd_string])
+                cmd_string = "ip address %s/%s\n" % (net.ipv4.ip, net.ipv4.prefixlen)
             if net.ipv6:
-                cmd_string = "ipv6 address %s/%s" % (net.ipv6.ip, net.ipv6.prefixlen)
-                r = c.Run([cmd_string])
-            cmd_string = "end"
+                cmd_string = "ipv6 address %s/%s\n" % (net.ipv6.ip, net.ipv6.prefixlen)
+            cmd_string = "end\n"
             r = c.Run([cmd_string])
 
     def AddLink(self, node, conn, net, mtu=None):
@@ -905,15 +893,12 @@ class SwitchInterface(Interface):
         else:
             c = node.conn
             if conn.port_channel:
-                cmd_string = "configure terminal"
-                r = c.Run([cmd_string])
-                cmd_string = "feature lacp"
-                r = c.Run([cmd_string])
-                cmd_string = "interface port-channel %s" % conn.port_channel
-                r = c.Run([cmd_string])
                 if not link_exists:
                     logger.debug("Port channel %s not found" % conn.port_channel)
-                    cmd_string = "switchport mode trunk"
+                    cmd_string = "configure terminal\n"
+                    cmd_string += "feature lacp\n"
+                    cmd_string += "interface port-channel %s\n" % conn.port_channel
+                    cmd_string += "switchport mode trunk\n"
                     r = c.Run([cmd_string])
                     logger.debug("Looking if all vlans 1-4094 are allowed ...")
                     cmd_string = "show interface port-channel %s switchport | grep \"Trunking VLANs Allowed\"" % conn.port_channel
@@ -924,12 +909,12 @@ class SwitchInterface(Interface):
                             logger.debug("All vlans 1-4094 are allowed, changing to none")
                             cmd_string = "switchport trunk allowed vlan none"
                             r = c.Run([cmd_string])
-                cmd_string = "end"
-                r = c.Run([cmd_string])
+                            break
+                    cmd_string = "end"
+                    r = c.Run([cmd_string])
             # configure the interface
-            cmd_string = "configure terminal"
-            r = c.Run([cmd_string])
-            cmd_string = "interface ethernet %s" % self.name
+            cmd_string = "configure terminal\n"
+            cmd_string += "interface ethernet %s\n" % self.name
             r = c.Run([cmd_string])
             # if not trunk, enable it
             logger.debug("Looking if mode is trunk ...")
@@ -943,6 +928,7 @@ class SwitchInterface(Interface):
                         logger.debug("Mode is not trunk: %s, changing to trunk" % mode)
                         cmd_string = "switchport mode trunk"
                         r = c.Run([cmd_string])
+                        break
             logger.debug("Looking if all vlans 1-4094 are allowed ...")
             cmd_string = "show interface ethernet %s switchport | grep \"Trunking VLANs Allowed\"" % self.name
             r = c.Run([cmd_string])
@@ -952,15 +938,13 @@ class SwitchInterface(Interface):
                     logger.debug("All vlans 1-4094 are allowed, changing to none")
                     cmd_string = "switchport trunk allowed vlan none"
                     r = c.Run([cmd_string])
+                    break
             # Add the vlans
             if conn.port_channel:
-                cmd_string = "channel-group %s force mode active" % conn.port_channel
-                r = c.Run([cmd_string])
-                cmd_string = "interface port-channel %s" % conn.port_channel
-                r = c.Run([cmd_string])
-            cmd_string = "switchport trunk allowed vlan add %s" % conn.vlan
-            r = c.Run([cmd_string])
-            cmd_string = "end"
+                cmd_string = "channel-group %s force mode active\n" % conn.port_channel
+                cmd_string += "interface port-channel %s\n" % conn.port_channel
+            cmd_string += "switchport trunk allowed vlan add %s\n" % conn.vlan
+            cmd_string += "end\n"
             r = c.Run([cmd_string])
 
     def VerifyLink(self, node, conn, net):
@@ -976,12 +960,11 @@ class SwitchInterface(Interface):
                     logger.error("Did not find vlan, can't proceed")
                     assert False
                 logger.debug("Adding vlan %s", conn.vlan)
-                cmd_string = "configure terminal"
+                cmd_string = "configure terminal\n"
+                cmd_string += "vlan %s\n" % conn.vlan
+                cmd_string += "exit\n"
                 r = c.Run([cmd_string])
-                cmd_string = "vlan %s" % conn.vlan
-                r = c.Run([cmd_string])
-                cmd_string = "exit"
-                r = c.Run([cmd_string])
+                break
         logger.debug("Vlan %s configured" % conn.vlan)
         # find interface, then port channel
         found = False
@@ -1034,6 +1017,7 @@ class StarOsInterface(Interface):
             if res_obj:
                 logger.debug("Interface %s found, status is UP" % self.name)
                 link_exists =  True
+                break
         if node.make.model == "ASR5500":
             card, port = self.name.split("/")
             if card == "5":
@@ -1050,6 +1034,7 @@ class StarOsInterface(Interface):
             if res_obj:
                 logger.debug("Interface %s found, status is UP" % new_intf)
                 link_exists =  True
+                break
         # verify
         if not link_exists:
             logger.error("Interface %s not found, or status is DOWN" % self.name)

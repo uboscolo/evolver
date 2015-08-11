@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<tools name="master16">
+<tools name="master16" host="anchor1-vm1.mitg-tew01.cisco.com">
+    <preferences master_files="/localdisk/master_files" init_files="/localdisk/init_files" support_files="/localdisk/master_files/lps_configs"/>
     <traffic_mix name="VzW">
         <map ip_version="ipv4" protocol="http" port="80" descriptor="/localdisk/xml-files/HTTP/1_get_1_trans_50KB.xml"/>
     </traffic_mix>
@@ -36,24 +37,24 @@
         <settings vr="1" affinity_offset="0" instances="10" lte_network="VzW"/> 
         <control_plane local_ipv4_addr="172.30.16.129" local_ipv6_addr="fd00:0014:0010::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
         <data_plane local_ipv4_addr="172.30.16.129" local_ipv6_addr="fd00:0014:0010::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
-        <call_model name="vzw-sgw-static-2" count="5000" make_rate="15" break_rate="15" initial_delay="120" delay="120"/>
+        <call_model name="vzw-sgw-static-2" count="6250" make_rate="10" break_rate="10" initial_delay="120" delay="120"/>
     </lattice>
     <lattice id="80" host="luto16.mitg-tew01.cisco.com">
         <settings vr="2" affinity_offset="0" instances="10" lte_network="VzW"/> 
         <control_plane local_ipv4_addr="172.30.80.129" local_ipv6_addr="fd00:0014:0050::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
         <data_plane local_ipv4_addr="172.30.80.129" local_ipv6_addr="fd00:0014:0050::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
-        <call_model name="vzw-sgw-static-2" count="5000" make_rate="15" break_rate="15" initial_delay="120" delay="120"/>
+        <call_model name="vzw-sgw-static-2" count="6250" make_rate="10" break_rate="10" initial_delay="120" delay="120"/>
     </lattice>
     <lattice id="144" host="luto16.mitg-tew01.cisco.com">
         <settings vr="3" affinity_offset="0" instances="10" lte_network="VzW"/> 
         <control_plane local_ipv4_addr="172.30.144.129" local_ipv6_addr="fd00:0014:0090::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
         <data_plane local_ipv4_addr="172.30.144.129" local_ipv6_addr="fd00:0014:0090::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
-        <call_model name="vzw-sgw-static-2" count="5000" make_rate="15" break_rate="15" initial_delay="120" delay="120"/>
+        <call_model name="vzw-sgw-static-2" count="6250" make_rate="10" break_rate="10" initial_delay="120" delay="120"/>
     </lattice>
     <lattice id="208" host="luto16.mitg-tew01.cisco.com">
         <settings vr="4" affinity_offset="0" instances="10" lte_network="VzW"/> 
         <control_plane local_ipv4_addr="172.30.208.129" local_ipv6_addr="fd00:0014:00d0::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
         <data_plane local_ipv4_addr="172.30.208.129" local_ipv6_addr="fd00:0014:00d0::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
-        <call_model name="vzw-sgw-static-2" count="5000" make_rate="15" break_rate="15" initial_delay="120" delay="120"/>
+        <call_model name="vzw-sgw-static-2" count="6250" make_rate="10" break_rate="10" initial_delay="120" delay="120"/>
     </lattice>
 </tools>

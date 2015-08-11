@@ -1,0 +1,517 @@
+<?xml version="1.0"?>
+<system name="new system">
+    <!-- All Devices -->
+    <device name="luto3" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+        <make name="Cisco" model="UCS-C" type="c220"/>
+    </device>
+    <device name="evo1" domain="mitg-tew01.cisco.com" type="staros">
+        <make name="Cisco" model="ASR5500" type="MIO-DPC"/>
+    </device>
+    <device name="evo-sw1" domain="mitg-tew01.cisco.com" type="switch" configure="yes">
+        <make name="Cisco" model="Nexus" type="5596"/>
+    </device>
+    <device name="evo-sw2" domain="mitg-tew01.cisco.com" type="switch" configure="yes">
+        <make name="Cisco" model="Nexus" type="5596"/>
+    </device>
+    <!-- All Links from DUT to next hop switch -->
+    <link bandwidth="10G" node_a="evo1" interface_a="5/10" node_b="evo-sw1" interface_b="1/1">
+        <connectivity vlan="1513" port_channel="1">
+            <network ipv4_a="172.17.0.1/24" ipv6_a="fd00:0001:0000::1/64" vr_a="pgw-1" ipv4_b="172.17.0.129/24" ipv6_b="fd00:0001:0000::81/64" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network ipv4_a="172.19.0.1/24" ipv6_a="fd00:0003:0000::1/64" vr_a="ip-1" ipv4_b="172.19.0.129/24" ipv6_b="fd00:0003:0000::81/64" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network ipv4_a="172.21.0.1/24" ipv6_a="fd00:0005:0000::1/64" vr_a="auth-1" ipv4_b="172.21.0.129/24" ipv6_b="fd00:0005:0000::81/64" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/11" node_b="evo-sw1" interface_b="1/2">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/12" node_b="evo-sw1" interface_b="1/3">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/13" node_b="evo-sw1" interface_b="1/4">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/14" node_b="evo-sw1" interface_b="1/5">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/15" node_b="evo-sw1" interface_b="1/6">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/16" node_b="evo-sw1" interface_b="1/7">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/17" node_b="evo-sw1" interface_b="1/8">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/18" node_b="evo-sw1" interface_b="1/9">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/19" node_b="evo-sw1" interface_b="1/10">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/10" node_b="evo-sw1" interface_b="1/11">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/11" node_b="evo-sw1" interface_b="1/12">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/12" node_b="evo-sw1" interface_b="1/13">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/13" node_b="evo-sw1" interface_b="1/14">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/14" node_b="evo-sw1" interface_b="1/15">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/15" node_b="evo-sw1" interface_b="1/16">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/16" node_b="evo-sw1" interface_b="1/17">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/17" node_b="evo-sw1" interface_b="1/18">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/18" node_b="evo-sw1" interface_b="1/19">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/19" node_b="evo-sw1" interface_b="1/20">
+        <connectivity vlan="1513" port_channel="1">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1769" port_channel="1">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+        <connectivity vlan="1257" port_channel="1">
+            <network vr_a="auth-1" vr_b="au-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/20" node_b="evo-sw2" interface_b="1/1">
+        <connectivity vlan="1514" port_channel="2">
+            <network ipv4_a="172.17.1.1/24" ipv6_a="fd00:0001:0001::1/64" vr_a="pgw-1" ipv4_b="172.17.1.129/24" ipv6_b="fd00:0001:0001::81/64" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network ipv4_a="172.19.1.1/24" ipv6_a="fd00:0003:0001::1/64" vr_a="ip-1" ipv4_b="172.19.1.129/24" ipv6_b="fd00:0003:0001::81/64" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/21" node_b="evo-sw2" interface_b="1/2">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/22" node_b="evo-sw2" interface_b="1/3">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/23" node_b="evo-sw2" interface_b="1/4">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/24" node_b="evo-sw2" interface_b="1/5">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/25" node_b="evo-sw2" interface_b="1/6">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/26" node_b="evo-sw2" interface_b="1/7">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/27" node_b="evo-sw2" interface_b="1/8">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/28" node_b="evo-sw2" interface_b="1/9">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="5/29" node_b="evo-sw2" interface_b="1/10">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/20" node_b="evo-sw2" interface_b="1/11">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/21" node_b="evo-sw2" interface_b="1/12">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/22" node_b="evo-sw2" interface_b="1/13">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/23" node_b="evo-sw2" interface_b="1/14">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/24" node_b="evo-sw2" interface_b="1/15">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/25" node_b="evo-sw2" interface_b="1/16">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/26" node_b="evo-sw2" interface_b="1/17">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/27" node_b="evo-sw2" interface_b="1/18">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/28" node_b="evo-sw2" interface_b="1/19">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo1" interface_a="6/29" node_b="evo-sw2" interface_b="1/20">
+        <connectivity vlan="1514" port_channel="2">
+            <network vr_a="pgw-1" vr_b="s5-1"/>
+        </connectivity>
+        <connectivity vlan="1770" port_channel="2">
+            <network vr_a="ip-1" vr_b="sgi-1"/>
+        </connectivity>
+    </link>
+    <!-- All Links from test tools to next hop switch -->
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/25" node_b="luto3" interface_b="eth2">
+        <connectivity vlan="1003">
+            <network ipv4_a="172.18.3.129/24" ipv6_a="fd00:0002:0003::81/64" vr_a="s5-1" ipv4_b="172.18.3.1/24" ipv6_b="fd00:0002:0003::1/64" vr_b="1"/>
+        </connectivity>
+        <connectivity vlan="1067">
+            <network ipv4_a="172.18.67.129/24" ipv6_a="fd00:0002:0043::81/64" vr_a="s5-1" ipv4_b="172.18.67.1/24" ipv6_b="fd00:0002:0043::1/64" vr_b="2"/>
+        </connectivity>
+        <connectivity vlan="2003" mtu_b="1280">
+            <network ipv4_a="172.20.3.129/24" ipv6_a="fd00:0004:0003::81/64" vr_a="sgi-1" ipv4_b="172.20.3.1/24" ipv6_b="fd00:0004:0003::1/64" vr_b="21"/>
+        </connectivity>
+        <connectivity vlan="2067" mtu_b="1280">
+            <network ipv4_a="172.20.67.129/24" ipv6_a="fd00:0004:0043::81/64" vr_a="sgi-1" ipv4_b="172.20.67.1/24" ipv6_b="fd00:0004:0043::1/64" vr_b="22"/>
+        </connectivity>
+    </link>
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/26" node_b="luto3" interface_b="eth3">
+        <connectivity vlan="1131">
+            <network ipv4_a="172.18.131.129/24" ipv6_a="fd00:0002:0083::81/64" vr_a="s5-1" ipv4_b="172.18.131.1/24" ipv6_b="fd00:0002:0083::1/64" vr_b="3"/>
+        </connectivity>
+        <connectivity vlan="1195">
+            <network ipv4_a="172.18.195.129/24" ipv6_a="fd00:0002:00c3::c1/64" vr_a="s5-1" ipv4_b="172.18.195.1/24" ipv6_b="fd00:0002:00c3::1/64" vr_b="4"/>
+        </connectivity>
+        <connectivity vlan="2131" mtu_b="1280">
+            <network ipv4_a="172.20.131.129/24" ipv6_a="fd00:0004:0083::81/64" vr_a="sgi-1" ipv4_b="172.20.131.1/24" ipv6_b="fd00:0004:0083::1/64" vr_b="23"/>
+        </connectivity>
+        <connectivity vlan="2195" mtu_b="1280">
+            <network ipv4_a="172.20.195.129/24" ipv6_a="fd00:0004:00c3::c1/64" vr_a="sgi-1" ipv4_b="172.20.195.1/24" ipv6_b="fd00:0004:00c3::1/64" vr_b="24"/>
+        </connectivity>
+    </link>
+    <!-- All routes from UE side to service and vice-versa -->
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.30.3.129/32" vr_from="1" num_from="10" v4_addr_to="172.30.0.1/32" vr_to="pgw-1" v4_addr_via="172.18.3.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0003::81/128" vr_from="1" num_from="10" v6_addr_to="fd00:0014:0000::1/128" vr_to="pgw-1" v6_addr_via="fd00:0002:0003::81/64" vr_via="s5-1"/>
+    </route>
+    <route type="static" node_from="evo1" node_to="luto3" node_via="evo-sw1">
+        <network v4_addr_from="172.30.0.1/32" vr_from="pgw-1" v4_addr_to="172.30.3.0/24" vr_to="1" v4_addr_via="172.17.0.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0000::1/128" vr_from="pgw-1" v6_addr_to="fd00:0014:0003::0/64" vr_to="1" v6_addr_via="fd00:0001:0000::81/64" vr_via="s5-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.30.67.129/32" vr_from="2" num_from="10" v4_addr_to="172.30.0.1/32" vr_to="pgw-1" v4_addr_via="172.18.67.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0043::81/128" vr_from="2" num_from="10" v6_addr_to="fd00:0014:0000::1/128" vr_to="pgw-1" v6_addr_via="fd00:0002:0043::81/64" vr_via="s5-1"/>
+    </route>
+    <route type="static" node_from="evo1" node_to="luto3" node_via="evo-sw1">
+        <network v4_addr_from="172.30.0.1/32" vr_from="pgw-1" v4_addr_to="172.30.67.0/24" vr_to="2" v4_addr_via="172.17.0.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0000::1/128" vr_from="pgw-1" v6_addr_to="fd00:0014:0043::0/64" vr_to="2" v6_addr_via="fd00:0001:0000::81/64" vr_via="s5-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.30.131.129/32" vr_from="3" num_from="10" v4_addr_to="172.30.0.1/32" vr_to="pgw-1" v4_addr_via="172.18.131.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0083::81/128" vr_from="3" num_from="10" v6_addr_to="fd00:0014:0000::1/128" vr_to="pgw-1" v6_addr_via="fd00:0002:0083::81/64" vr_via="s5-1"/>
+    </route>
+    <route type="static" node_from="evo1" node_to="luto3" node_via="evo-sw1">
+        <network v4_addr_from="172.30.0.1/32" vr_from="pgw-1" v4_addr_to="172.30.131.0/24" vr_to="3" v4_addr_via="172.17.0.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0000::1/128" vr_from="pgw-1" v6_addr_to="fd00:0014:0083::0/64" vr_to="3" v6_addr_via="fd00:0001:0000::81/64" vr_via="s5-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.30.195.129/32" vr_from="4" num_from="10" v4_addr_to="172.30.0.1/32" vr_to="pgw-1" v4_addr_via="172.18.195.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:00c3::81/128" vr_from="4" num_from="10" v6_addr_to="fd00:0014:0000::1/128" vr_to="pgw-1" v6_addr_via="fd00:0002:00c3::81/64" vr_via="s5-1"/>
+    </route>
+    <route type="static" node_from="evo1" node_to="luto3" node_via="evo-sw1">
+        <network v4_addr_from="172.30.0.1/32" vr_from="pgw-1" v4_addr_to="172.30.195.0/24" vr_to="4" v4_addr_via="172.17.0.129/24" vr_via="s5-1"/>
+        <network v6_addr_from="fd00:0014:0000::1/128" vr_from="pgw-1" v6_addr_to="fd00:0014:00c3::0/64" vr_to="4" v6_addr_via="fd00:0001:0000::81/64" vr_via="s5-1"/>
+    </route>
+    <!-- All routes from DUT to router -->
+    <route type="static" node_from="evo1" node_to="evo-sw1" node_via="evo-sw1">
+        <network v4_addr_from="1.0.0.1/32" vr_from="ip-1" v4_addr_to="1.0.0.129/32" vr_to="sgi-1" v4_addr_via="172.19.0.129/24" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="evo-sw1" node_to="evo1" node_via="evo1">
+        <network v4_addr_from="1.0.0.129/32" vr_from="sgi-1" v4_addr_to="1.0.0.1/32" vr_to="ip-1" v4_addr_via="172.19.0.1/24" vr_via="ip-1"/>
+    </route>
+    <!-- All routes from DUT to Internet side tools and vice-versa -->
+    <route type="bgp" node_from="evo1" node_to="luto3">
+        <network v4_addr_from="1.0.0.1/32" vr_from="ip-1" v4_addr_to="172.20.3.1/24" vr_to="21"/>
+    </route>
+    <route type="bgp" node_from="evo1" node_to="luto3">
+        <network v4_addr_from="1.0.0.1/32" vr_from="ip-1" v4_addr_to="172.20.67.1/24" vr_to="22"/>
+    </route>
+    <route type="bgp" node_from="evo1" node_to="luto3">
+        <network v4_addr_from="1.0.0.1/32" vr_from="ip-1" v4_addr_to="172.20.131.1/24" vr_to="23"/>
+    </route>
+    <route type="bgp" node_from="evo1" node_to="luto3">
+        <network v4_addr_from="1.0.0.1/32" vr_from="ip-1" v4_addr_to="172.20.195.1/24" vr_to="24"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.20.3.1/24" vr_from="21" v4_addr_to="1.0.0.1/32" vr_to="ip-1" v4_addr_via="172.20.3.129/24" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.20.67.1/24" vr_from="22" v4_addr_to="1.0.0.1/32" vr_to="ip-1" v4_addr_via="172.20.67.129/24" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.20.131.1/24" vr_from="23" v4_addr_to="1.0.0.1/32" vr_to="ip-1" v4_addr_via="172.20.131.129/24" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">
+        <network v4_addr_from="172.20.195.1/24" vr_from="24" v4_addr_to="1.0.0.1/32" vr_to="ip-1" v4_addr_via="172.20.195.129/24" vr_via="sgi-1"/>
+    </route>
+    <!-- All routes from Internet side tools to subscriber ipv4 pools and vice-versa -->
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1" num="3">
+        <network v4_addr_from="172.28.3.129/32" vr_from="21" num_from="10" v4_addr_to="101.248.0.0/16" vr_to="ip-1" v4_addr_via="172.20.3.129/24" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1" num="3">
+        <network v4_addr_from="172.28.67.129/32" vr_from="22" num_from="10" v4_addr_to="101.248.0.0/16" vr_to="ip-1" v4_addr_via="172.20.67.129/24" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1" num="3">
+        <network v4_addr_from="172.28.131.129/32" vr_from="23" num_from="10" v4_addr_to="101.248.0.0/16" vr_to="ip-1" v4_addr_via="172.20.131.129/24" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1" num="3">
+        <network v4_addr_from="172.28.195.129/32" vr_from="24" num_from="10" v4_addr_to="101.248.0.0/16" vr_to="ip-1" v4_addr_via="172.20.195.129/24" vr_via="sgi-1"/>
+    </route>
+    <!-- All routes from Internet side tools to subscriber ipv6 pools and vice-versa -->
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1" num="2">
+        <network v6_addr_from="fd00:0012:0003::81/128" vr_from="21" num_from="10" v6_addr_to="fd01:1::0/32" vr_to="ip-1" v6_addr_via="fd00:0004:0003::81/64" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1" num="2">
+        <network v6_addr_from="fd00:0012:0043::81/128" vr_from="22" num_from="10" v6_addr_to="fd01:1::0/32" vr_to="ip-1" v6_addr_via="fd00:0004:0043::81/64" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1" num="2">
+        <network v6_addr_from="fd00:0012:0083::81/128" vr_from="23" num_from="10" v6_addr_to="fd01:1::0/32" vr_to="ip-1" v6_addr_via="fd00:0004:0083::81/64" vr_via="sgi-1"/>
+    </route>
+    <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1" num="2">
+        <network v6_addr_from="fd00:0012:00c3::81/128" vr_from="24" num_from="10" v6_addr_to="fd01:1::0/32" vr_to="ip-1" v6_addr_via="fd00:0004:00c3::81/64" vr_via="sgi-1"/>
+    </route>
+</system>

@@ -4,8 +4,8 @@ from evolver.evolve import *
 
 def setup():
     try:
-        if os.path.exists("/tmp/evolve_topology.log"):
-            os.remove("/tmp/evolve_topology.log")
+        if os.path.exists("/tmp/evolve_topology_luto3.log"):
+            os.remove("/tmp/evolve_topology_luto3.log")
     except:
         raise
 
@@ -18,8 +18,8 @@ def teardown():
 def test_1():
     """Run Test 1"""
     try:
-        Logger("extensive", "/tmp/evolve_topology.log")
-        xml_file = open("tests/functest/topology.xml", "r")
+        Logger("extensive", "/tmp/evolve_topology_luto3.log")
+        xml_file = open("tests/functest/topology_luto3.xml", "r")
         p = Parser(xml_file)
         sys = p.ParseXml()
         sys.Display()

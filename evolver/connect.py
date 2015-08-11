@@ -2,6 +2,7 @@ import pexpect
 import datetime
 import time
 import re
+import time
 from evolve_log import *
 
 logger = GetLogger()
@@ -126,11 +127,14 @@ class Connect(object):
         assert False
     
     def Run(self, cmd_list):
+        logger.debug("Run In 1: %s", time.clock()) 
         if not self.connection_id:
             logger.error("Connection is not open %s" % self.connection_id)
             assert False
         for line in cmd_list:
+            logger.debug("Run In 2: %s", time.clock())
             self.connection_id.sendline(line)
+            logger.debug("Run In 3: %s", time.clock()) 
             res = self.__Expect()
             for line in res.splitlines():
                 #res_obj = re.search(r'.*Device (.*) does not exist', line)
@@ -149,6 +153,7 @@ class Connect(object):
                 if res_obj:
                     logger.error("Error, %s" % res_obj.group())
                     assert False
+        logger.debug("Run Out: %s", time.clock()) 
         return res
 
     def Close(self):

@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<tools name="master7" host="anchor1-vm1.mitg-tew01.cisco.com">
+    <preferences master_files="/localdisk/master_files" init_files="/localdisk/init_files" support_files="/localdisk/master_files/lps_configs"/>
+    <traffic_mix name="VzW">
+        <map ip_version="ipv4" protocol="http" port="80" descriptor="/localdisk/xml-files/HTTP/1_get_1_trans_50KB.xml"/>
+    </traffic_mix>
+    <lte_network name="VzW">
+        <parameters mcc="480" mnc="311" tac="201"/>
+        <apn name="ims-1" type="ipv6" qci="5" arp="14" pec="enable"/>
+        <apn name="internet-1" type="ipv4v6" qci="9" arp="11" pec="enable"/>
+    </lte_network>
+    <stargen id="7" host="luto7.mitg-tew01.cisco.com" type="client">
+        <settings vr="1" affinity_offset="0" instances="10" traffic_model="VzW" ipv4_addr="172.28.7.129" ipv6_addr="fd00:0012:0007::81"/>
+    </stargen>
+    <stargen id="71" host="luto7.mitg-tew01.cisco.com" type="client">
+        <settings vr="2" affinity_offset="10" instances="10" traffic_model="VzW" ipv4_addr="172.28.71.129" ipv6_addr="fd00:0012:0047::81"/>
+    </stargen>
+    <stargen id="135" host="luto7.mitg-tew01.cisco.com" type="client">
+        <settings vr="3" affinity_offset="20" instances="10" traffic_model="VzW" ipv4_addr="172.28.135.129" ipv6_addr="fd00:0012:0087::81"/>
+    </stargen>
+    <stargen id="199" host="luto7.mitg-tew01.cisco.com" type="client">
+        <settings vr="4" affinity_offset="30" instances="10" traffic_model="VzW" ipv4_addr="172.28.199.129" ipv6_addr="fd00:0012:00c7::81"/>
+    </stargen>
+    <stargen id="7" host="luto7.mitg-tew01.cisco.com" type="server">
+        <settings vr="21" affinity_offset="0" instances="10" traffic_model="VzW" ipv4_addr="172.28.7.129" ipv6_addr="fd00:0012:0007::81"/>
+    </stargen>
+    <stargen id="71" host="luto7.mitg-tew01.cisco.com" type="server">
+        <settings vr="22" affinity_offset="10" instances="10" traffic_model="VzW" ipv4_addr="172.28.71.129" ipv6_addr="fd00:0012:0047::81"/>
+    </stargen>
+    <stargen id="135" host="luto7.mitg-tew01.cisco.com" type="server" >
+        <settings vr="23" affinity_offset="20" instances="10" traffic_model="VzW" ipv4_addr="172.28.135.129" ipv6_addr="fd00:0012:0087::81"/>
+    </stargen>
+    <stargen id="199" host="luto7.mitg-tew01.cisco.com" type="server" >
+        <settings vr="24" affinity_offset="30" instances="10" traffic_model="VzW" ipv4_addr="172.28.199.129" ipv6_addr="fd00:0012:00c7::81"/>
+    </stargen>
+    <lattice id="7" host="luto7.mitg-tew01.cisco.com">
+        <settings vr="1" affinity_offset="0" instances="10" lte_network="VzW"/> 
+        <control_plane local_ipv4_addr="172.30.7.129" local_ipv6_addr="fd00:0014:0007::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0001::1"/>
+        <data_plane local_ipv4_addr="172.30.7.129" local_ipv6_addr="fd00:0014:0007::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
+        <call_model name="vzw-sgw-static-2" count="6250" make_rate="10" break_rate="10" initial_delay="120" delay="120"/>
+    </lattice>
+    <lattice id="71" host="luto7.mitg-tew01.cisco.com">
+        <settings vr="2" affinity_offset="0" instances="10" lte_network="VzW"/> 
+        <control_plane local_ipv4_addr="172.30.71.129" local_ipv6_addr="fd00:0014:0047::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
+        <data_plane local_ipv4_addr="172.30.71.129" local_ipv6_addr="fd00:0014:0047::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
+        <call_model name="vzw-sgw-static-2" count="6250" make_rate="10" break_rate="10" initial_delay="120" delay="120"/>
+    </lattice>
+    <lattice id="135" host="luto7.mitg-tew01.cisco.com">
+        <settings vr="3" affinity_offset="0" instances="10" lte_network="VzW"/> 
+        <control_plane local_ipv4_addr="172.30.135.129" local_ipv6_addr="fd00:0014:0087::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
+        <data_plane local_ipv4_addr="172.30.135.129" local_ipv6_addr="fd00:0014:0087::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
+        <call_model name="vzw-sgw-static-2" count="6250" make_rate="10" break_rate="10" initial_delay="120" delay="120"/>
+    </lattice>
+    <lattice id="199" host="luto7.mitg-tew01.cisco.com">
+        <settings vr="4" affinity_offset="0" instances="10" lte_network="VzW"/> 
+        <control_plane local_ipv4_addr="172.30.199.129" local_ipv6_addr="fd00:0014:00c7::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
+        <data_plane local_ipv4_addr="172.30.199.129" local_ipv6_addr="fd00:0014:00c7::81" remote_ipv4_addr="172.30.0.1" remote_ipv6_addr="fd00:0014:0000::1"/>
+        <call_model name="vzw-sgw-static-2" count="6250" make_rate="10" break_rate="10" initial_delay="120" delay="120"/>
+    </lattice>
+</tools>

@@ -30,25 +30,32 @@ class Master(object):
         self.callgenerators = [ ]
         self.lte_networks = [ ]
         self.lte_networks_by_name = { }
-        self.masterfile = "/localdisk/master_files/%s.cfg" % self.name
-        self.support_lps_dir = "/localdisk/master_files/lps_configs"
-        self.conn = Connect("anchor1-vm1.mitg-tew01.cisco.com", "root", "starent")
-        if self.conn.Open():
-            logger.info("Connected to Master")
-
-        cmd_string = "echo > %s" % self.masterfile
-        self.conn.Run([cmd_string])
+        self.masterfile = None
+        self.initfile = None
+        self.support_lps_dir = None
+        self.conn = None
+        self.screen = Screen(name)
 
     def CreateServers(self):
+        cmd_string = "echo -e \""
+        cmd_string += "\n#Servers"
+        cmd_string += "\" >> %s\n" % self.masterfile
+        self.conn.Run([cmd_string])
         for s in self.servers:
             tm = self.traffic_models_by_name[s.tm_handler]
             gen = "%sServer" % tm.protocol
             out = "create_server {%s handle %s affinity %s vr %s stargen_generator %s rsa %s rv6sa %s dst_port %s xml_file %s}" % (s.host, s.handle, s.affinity, s.vr, gen, s.dst_ipv4_addr, s.dst_ipv6_addr, tm.dst_port, tm.descriptor)
             logger.debug(out)
-            cmd_string = "echo %s >> %s" % (out, self.masterfile)
+            cmd_string = "echo -e \""
+            cmd_string += "%s" % out
+            cmd_string += "\" >> %s\n" % self.masterfile
             self.conn.Run([cmd_string])
 
     def CreateClients(self):
+        cmd_string = "echo -e \""
+        cmd_string += "\n#Clients"
+        cmd_string += "\" >> %s\n" % self.masterfile
+        self.conn.Run([cmd_string])
         for c in self.clients:
             # get callgenerator object via id
             c_ref = None
@@ -64,13 +71,20 @@ class Master(object):
             gen = "%sGen" % tm.protocol
             out = "create_client {%s handle %s affinity %s vr %s callgen_type %s clp %s cli %s af %s user_config %s call_model %s stargen_generator %s rsa %s rv6sa %s dst_port %s txrate 1 %s xml_file %s}" % (c.host, c.handle, c.affinity, c.vr, c.cg_handler.type, c.cg_handler.clp, c.cg_handler.cli, c.cg_handler.affinity, c.cg_handler.user_config, c_ref.call_model.name, gen, c.dst_ipv4_addr, c.dst_ipv6_addr, tm.dst_port, tm.data_version, tm.descriptor)
             logger.debug(out)
-            cmd_string = "echo %s >> %s" % (out, self.masterfile)
+            cmd_string = "echo -e \""
+            cmd_string += "%s" % out
+            cmd_string += "\" >> %s\n" % self.masterfile
             self.conn.Run([cmd_string])
-        logger.debug("dynamic_address \"yes\"")
-        cmd_string = "echo dynamic_address \\\"yes\\\" >> %s" % self.masterfile
+        # Common Settings
+        cmd_string = "echo -e \""
+        cmd_string += "\n#Common Settings\n"
+        cmd_string += "dynamic_address \\\"yes\\\"\n"
+        cmd_string += "idle_timeout 2000\n"
+        cmd_string += "\" >> %s" % self.masterfile
         self.conn.Run([cmd_string])
-        logger.debug("idle_timeout 2000")
-        cmd_string = "echo idle_timeout 2000 >> %s" % self.masterfile
+        cmd_string = "echo -e \""
+        cmd_string += "start_all %s" % self.masterfile
+        cmd_string += "\" >> %s" % self.initfile
         self.conn.Run([cmd_string])
 
     def CreateLatticeConfigs(self):
@@ -86,6 +100,9 @@ class Master(object):
                 logger.error("Did not find associated object, can't proceed")
                 assert False
             lt = self.lte_networks_by_name[l.lte_network]
+            # remove, verify file is not there ...
+            cmd_string = "rm %s" % c_ref.cg_handler.user_config
+            self.conn.Run([cmd_string])
             cmd_list = [ ]
             cmd_list.append("configure")
             cmd_list.append("    lte-policy")
@@ -178,12 +195,48 @@ class Master(object):
             cmd_list.append("        traffic-model tm-1")
             cmd_list.append("    #exit")
             cmd_list.append("end")
-            cmd_list2 = [ ]
-            cmd_list2.append("echo > %s" % c_ref.cg_handler.user_config)
+            cmd_string = "echo -e \""
             for c in cmd_list:
-                cmd_list2.append("echo \"%s\" >> %s" % (c, c_ref.cg_handler.user_config))
-            self.conn.Run(cmd_list2)
+                cmd_string += "%s\n" % c
+            cmd_string += "\" >> %s" % c_ref.cg_handler.user_config
+            self.conn.Run([cmd_string])
 
+    def Start(self):
+        self.screen.Create(self.conn)
+        self.screen.StartMaster(self.conn, self.initfile)
+
+
+class Screen(object):
+
+    def __init__(self, name):
+        self.name = name
+        self.handle = None
+ 
+    def Create(self, conn):
+        # check if another instance exists, assuming screen is there
+        cmd_string = "screen -list | grep %s" % self.name
+        r = conn.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'\s+(\d+)\.([\d\w]+)\s+(\([\w]+\))', line)
+            if res_obj:
+                pid = res_obj.group(1)
+                name = res_obj.group(2)
+                status = res_obj.group(3)
+                logger.debug("Pid: %s, Name: %s, Status: %s" % (pid, name, status))
+                if name == self.name:
+                    logger.debug("Found screen: %s" % name)
+                    instance = "%s.%s" % (pid, name)
+                    self.Quit(conn, instance)
+        cmd_string = "screen -dmS %s" % self.name
+        r = conn.Run([cmd_string])
+
+    def Quit(self, conn, instance):
+        cmd_string = "screen -S %s -X quit" % instance
+        r = conn.Run([cmd_string])
+
+    def StartMaster(self, conn, file):
+        cmd_string = "screen -S %s -p 0 -X eval \'stuff \"cd /localdisk/stargen2; ./stargen -master -init %s\\015\"\'" % (self.name, file)
+        r = conn.Run([cmd_string])
 
 
 class Stargen(object):
@@ -412,8 +465,16 @@ class ToolParser(object):
         root_tag = tree.getroot()
         assert root_tag.tag == "tools"
         assert 'name' in root_tag.attrib.keys()
+        assert 'host' in root_tag.attrib.keys()
         name = root_tag.attrib['name']
+        host = root_tag.attrib['host']
         master = Master(name)
+        # assuming root connection, define host as an object ...
+        master.conn = Connect(host, "root", "starent")
+        if not master.conn.Open():
+            logger.error("Could not connect to master")
+            assert False
+        logger.info("Connected to Master")
         for next_tag in root_tag:
             if next_tag.tag == "stargen":
                 self.__AddStargens(next_tag, master)
@@ -423,6 +484,17 @@ class ToolParser(object):
                 self.__AddLattices(next_tag, master)
             elif next_tag.tag == "lte_network":
                 self.__AddLteNetwork(next_tag, master)
+            elif next_tag.tag == "preferences":
+                master_folder = next_tag.attrib['master_files']
+                init_folder = next_tag.attrib['init_files']
+                support_folder = next_tag.attrib['support_files']
+                master.masterfile = "%s/%s.cfg" % (master_folder, name)
+                master.initfile = "%s/%s.ini" % (init_folder, name)
+                master.support_lps_dir = "%s" % support_folder
+                cmd_string = "echo > %s" % master.masterfile
+                master.conn.Run([cmd_string])
+                cmd_string = "echo > %s" % master.initfile
+                master.conn.Run([cmd_string])
             else:
                 logger.error("Unknown tag %s" % next_tag.tag)
                 raise
