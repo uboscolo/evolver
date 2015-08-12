@@ -1,6 +1,6 @@
 from nose.tools import *
 import os
-from evolver.evolve import *
+from evolver.stargen import *
 
 def setup():
     try:
