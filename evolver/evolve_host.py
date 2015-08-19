@@ -27,9 +27,21 @@ class Host(object):
         logger.error("Method not implemented")
         assert False
 
+    def AddNetworkInterface(self, dev, net, vlan, mtu):
+        logger.error("Method not implemented")
+        assert False
+
+    def AddPortChannel(self, pname, intf):
+        logger.debug("Stub Method")
+        pass
+
     def AddRoute(self, net_from, net_to, net_via, ver=4):
         logger.error("Method not implemented")
         assert False
+
+    def AddVlan(self, vlan):
+        logger.debug("Stub Method")
+        pass
 
     def Connect(self):
         self.hostname = self.name + "." + self.domain
@@ -91,8 +103,23 @@ class DebianHost(Host):
         self.interfaces.append(new_intf)
         self.interfaces_by_name[name] = new_intf
         new_intf.verify_only = self.verify_only
+        new_intf.VerifyLink(self.conn, None)
         new_intf.Bringup(self.conn)
         new_intf.RingSize(self.conn)
+
+    def AddNetworkInterface(self, dev, net, vlan, mtu):
+        # Only handle vlan tagged interfaces
+        name = "%s.%s" % (dev.name, vlan) 
+        if name in self.interfaces_by_name.keys():
+            new_intf = self.interfaces_by_name[name]
+        else:
+            new_intf = LinuxInterface(name, None)
+            self.interfaces.append(new_intf)
+            self.interfaces_by_name[name] = new_intf
+            new_intf.verify_only = self.verify_only
+        new_intf.VerifyLink(self.conn, net)
+        new_intf.AddLink(self.conn, net, mtu)
+        new_intf.AddNetwork(self.conn, net)
 
     def AddRoute(self, net_from, net_to, net_via, ver=4):
         c = self.conn
@@ -173,17 +200,50 @@ class StarOsHost(Host):
         self.syslog_server = None
         self.crash_server = None
         self.bulkstats_server = None
+        self.port_channels = [ ]
+        self.port_channels_by_name = { }
+        self.vlans = [ ]
 
     def AddInterface(self, name, bandwidth):
         new_intf = StarOsInterface(name, bandwidth)
         self.interfaces.append(new_intf)
         self.interfaces_by_name[name] = new_intf
-        if not self.verify_only:
-            new_intf.verify_only = False
+        new_intf.verify_only = self.verify_only
+        new_intf.VerifyLink(self.conn, None)
+
+    def AddNetworkInterface(self, dev, net, vlan, mtu):
+        # Only handle vlan tagged interfaces
+        name = "vlan-%s" % vlan 
+        if name in self.interfaces_by_name.keys():
+            new_intf = self.interfaces_by_name[name]
+        else:
+            new_intf = StarOsInterface(name, None)
+            self.interfaces.append(new_intf)
+            self.interfaces_by_name[name] = new_intf
+            new_intf.verify_only = self.verify_only
+        new_intf.VerifyLink(self.conn, net)
 
     def AddLoopback(self, addr, vr, num=1):
         for l in range(num):
             logger.debug("Checking for loopback ...")
+
+    def AddPortChannel(self, pname, intf):
+        if not pname:
+            logger.debug("No port-channel to be added")
+            return
+        c = self.conn
+        logger.debug("Adding port-channel %s ..." % pname)
+        if not pname in self.port_channels_by_name.keys():
+            p = PortChannel(pname)
+            logger.debug("Looking for port-channel %s ..." % p.name)
+            if self.verify_only:
+                logger.warning("Port-channel %s not found, proceeding ..." % p.name)
+            self.port_channels.append(p)
+            self.port_channels_by_name[p.name] = p
+        else:
+            p = self.port_channels_by_name[pname]
+        if not intf.port_channel:
+            intf.port_channel = p
 
     def AddRoute(self, net_from, net_to, net_via, ver=4):
         # check route
@@ -261,14 +321,31 @@ class Switch(Host):
         self.username = "admin"
         self.password = "starent"
         self.port_channels = [ ]
+        self.port_channels_by_name = { }
         self.vlans = [ ]
 
     def AddInterface(self, name, bandwidth):
         new_intf = SwitchInterface(name, bandwidth)
         self.interfaces.append(new_intf)
         self.interfaces_by_name[name] = new_intf
-        if not self.verify_only:
-            new_intf.verify_only = False
+        new_intf.verify_only = self.verify_only
+        new_intf.VerifyLink(self.conn, None)
+        new_intf.Bringup(self.conn)
+
+    def AddNetworkInterface(self, dev, net, vlan, mtu):
+        # Only handle vlan tagged interfaces
+        name = "Vlan%s" % vlan 
+        if name in self.interfaces_by_name.keys():
+            new_intf = self.interfaces_by_name[name]
+        else:
+            new_intf = SwitchInterface(name, None)
+            self.interfaces.append(new_intf)
+            self.interfaces_by_name[name] = new_intf
+            new_intf.verify_only = self.verify_only
+        new_intf.VerifyLink(self.conn, net)
+        new_intf.AddLink(self.conn, net, mtu)
+        new_intf.AddVlan(self.conn, dev, vlan)
+        new_intf.AddNetwork(self.conn, net)
 
     def AddLoopback(self, addr, vr, num=1):
         for l in range(num):
@@ -317,12 +394,76 @@ class Switch(Host):
                 if not if_num:
                     logger.error("Ran out of loopback interfaces (%s)" % i)
                     assert False
-                cmd_string = "configure terminal\n"
-                cmd_string += "interface loopback %s\n" % if_num
-                cmd_string += "vrf member %s\n" % vr
-                cmd_string += "ip address %s\n" % ip
-                cmd_string += "end\n"
+                cmd_string = "configure terminal"
+                c.Run([cmd_string])
+                cmd_string = "interface loopback %s" % if_num
+                c.Run([cmd_string])
+                cmd_string = "vrf member %s" % vr
+                c.Run([cmd_string])
+                cmd_string = "ip address %s" % ip
+                c.Run([cmd_string])
+                cmd_string = "end"
+                c.Run([cmd_string])
+
+    def AddPortChannel(self, pname, intf):
+        if not pname:
+            logger.debug("No port-channel to be added")
+            return
+        c = self.conn
+        logger.debug("Adding port-channel %s ..." % pname)
+        if not pname in self.port_channels_by_name.keys():
+            p = PortChannel(pname)
+            logger.debug("Looking for port-channel %s ..." % p.name)
+            found = False
+            cmd_string = "show port-channel summary"
+            r = c.Run([cmd_string])
+            for line in r.splitlines():
+                res_obj = re.search(r'([\d]+).*Po([\d]+)', line)
+                if res_obj:
+                    po = res_obj.group(1)
+                    if po == p.name:
+                        logger.debug("Found port channel %s" % po)
+                        found = True
+                        break
+            if not found: 
+                if self.verify_only:
+                    logger.error("Did not find port-channel %s, can't proceed" % p.name)
+                    assert False
+                cmd_string = "configure terminal"
+                c.Run([cmd_string])
+                cmd_string = "feature lacp"
+                c.Run([cmd_string])
+                cmd_string = "interface port-channel %s" % p.name
+                c.Run([cmd_string])
+                cmd_string = "switchport mode trunk"
+                c.Run([cmd_string])
+                logger.debug("Looking if all vlans 1-4094 are allowed, in case disable ...")
+                cmd_string = "show interface port-channel %s switchport | grep \"Trunking VLANs Allowed\"" % p.name
                 r = c.Run([cmd_string])
+                for line in r.splitlines():
+                    res_obj = re.search(r'Trunking VLANs Allowed: 1-4094', line)
+                    if res_obj:
+                        logger.debug("All vlans 1-4094 are allowed, changing to none")
+                        cmd_string = "switchport trunk allowed vlan none"
+                        r = c.Run([cmd_string])
+                        break
+                cmd_string = "end"
+                r = c.Run([cmd_string])
+            self.port_channels.append(p)
+            self.port_channels_by_name[p.name] = p
+        else:
+            p = self.port_channels_by_name[pname]
+        if not intf.port_channel:
+            logger.debug("Adding port-channel %s to interface %s" % (p.name, intf.name))
+            intf.port_channel = p
+            cmd_string = "configure terminal"
+            c.Run([cmd_string])
+            cmd_string = "interface %s" % intf.name
+            c.Run([cmd_string])
+            cmd_string = "channel-group %s force mode active" % p.name
+            c.Run([cmd_string])
+            cmd_string = "end"
+            c.Run([cmd_string])
 
     def AddRoute(self, net_from, net_to, net_via, ver=4):
         # check route
@@ -362,6 +503,31 @@ class Switch(Host):
         # create route
         if not found:
             assert False
+
+    def AddVlan(self, vlan):
+        logger.debug("Adding vlan %s ..." % vlan)
+        if vlan in self.vlans:
+            logger.debug("Vlan %s already added" % vlan)
+            return
+        if self.verify_only:
+            logger.error("Did not find vlan %s, can't proceed" % vlan)
+            assert False
+        self.vlans.append(vlan)
+        c = self.conn
+        cmd_string = "show vlan id %s" % vlan
+        r = c.Run([cmd_string])
+        for line in r.splitlines():
+            res_obj = re.search(r'VLAN ([\d]+) not found in current VLAN database', line)
+            if res_obj:
+                logger.debug("Vlan %s not found, adding ..." % vlan)
+                cmd_string = "configure terminal"
+                c.Run([cmd_string])
+                cmd_string = "vlan %s" % vlan
+                c.Run([cmd_string])
+                cmd_string = "exit"
+                c.Run([cmd_string])
+                break
+        logger.debug("Added vlan %s" % vlan)
 
     def Connect(self):
         super(Switch, self).Connect()

@@ -9,11 +9,16 @@ logger = GetLogger()
 
 class Connect(object):
 
+    """Connect to remote host via ssh or telnet and issue commands.
+    """
+
     def __init__(self, host, username, password, **options):
         self.host = host
         self.username = username
         self.password = password
         self.options = options
+        self.console_output = "1 - Initiate a regular session"
+        self.cfe_break = "Abort Boot by Depressing"
         self.ssh_options = "UserKnownHostsFile /dev/null"
         self.new_key="Are you sure you want to continue connecting \(yes/no\)\?"
         self.passwd="[pP]assword:"
@@ -24,7 +29,24 @@ class Connect(object):
         self.child = ""
         self.connection_id = ""
 
-    def __Expect(self):
+        """This function is called at class creation.
+        Inputs:
+        host:      - String: hostname where to connect to
+        username:  - String: username 
+        password:  - String: password
+        options:   - Dictionary: optional parameters
+        """
+
+    def __Expect(self, t_out=120):
+
+        """This function implements the state machine to get to the 
+        prompt, it's to be used only by methods of this class
+
+        Inputs:     - Int: timeout
+
+        Outputs:    - String: everything up to the prompt
+        """
+
         if not self.connection_id:
             logger.error("Connection is not open %s" % self.connection_id)
             assert False 
@@ -36,73 +58,78 @@ class Connect(object):
                          self.new_key, 
                          self.login, 
                          self.passwd, 
+                         self.console_output,
+                         self.cfe_break,
                          self.prompt,
-                         self.generic_prompt])
+                         self.generic_prompt],
+                         timeout = t_out)
             if self.child == 0: # Timeout
-                if self.options.has_key("verbose"):
-                    logger.info("TIMEOUT: %s" % (self.connection_id.before))
                 self.connection_id.close()
-                logger.error("TIMEOUT: %s" % (self.connection_id.before))
+                logger.error("Timeout Expired, Buffer=<%s>" % (self.connection_id.before))
                 break
-            elif self.child == 1: 
-                logger.error("EOF: %s" % (self.connection_id.before))
+            elif self.child == 1: # EOF
+                logger.error("EOF received: Buffer=<%s>" % (self.connection_id.before))
                 self.connection_id.close()
                 break
             elif self.child == 2: # New key, do you want to continue? Yes
                 if self.options.has_key("verbose"):
-                    logger.info("NEW_KEY: %s" % (self.connection_id.before))
+                    logger.info("New key(before): Buffer=<%s>" % (self.connection_id.before))
                 self.connection_id.sendline("yes")
                 if self.options.has_key("verbose"):
-                    logger.info("NEW_KEY: %s" % (self.connection_id.after))
+                    logger.info("New key(after): Buffer=<%s>" % (self.connection_id.after))
             elif self.child == 3: # Login
                 if self.options.has_key("verbose"):
-                    logger.info("LOGIN: %s" % (self.connection_id.before))
+                    logger.info("Login detected: Buffer=<%s>" % (self.connection_id.before))
                 if (self.connection_id.match.group(1)) == "Last":
                     if self.options.has_key("verbose"):
-                        logger.info("LOGIN: Not a request for username")
+                        logger.info("Login detected, but it's not a request for username")
                 else:
                     self.connection_id.sendline(self.username)
-                if self.options.has_key("verbose"):
-                    logger.info("LOGIN: %s" % (self.connection_id.after))
             elif self.child == 4: # Password
                 if self.options.has_key("verbose"):
-                    logger.info("PASSWORD: %s" % (self.connection_id.before))
+                    logger.info("Password requested: Buffer=<%s>" % (self.connection_id.before))
                 self.connection_id.sendline(self.password)
+            elif self.child == 5: # Console output
                 if self.options.has_key("verbose"):
-                    logger.info("PASSWORD: %s" % (self.connection_id.after))
-            elif self.child == 5: # In
-                # see below, this case is not called
+                    logger.info("Console, multiple selection detected: Buffer=<%s>" % (self.connection_id.before))
+                # Choose 1 - Initiate a regular session
+                self.connection_id.sendline("1")
+            elif self.child == 6: # CFE break
                 if self.options.has_key("verbose"):
-                    logger.info("PROMPT: %s" % (self.connection_id.before))
-                #logger.debug("%s" % (self.connection_id.match.group()))
+                    logger.info("Console, request for Abort detected: Buffer=<%s>" % (self.connection_id.before))
+                self.connection_id.sendcontrol("c")
+            elif self.child == 7: # In, specific prompt found
+                # This case is only called after a generic prompt is found, and if the prompt is set
+                if self.options.has_key("verbose"):
+                    logger.info("Prompt found: Buffer=<%s>" % (self.connection_id.before))
                 retVal = self.connection_id.match.group()
                 break
-            elif self.child == 6: # In
-                for line in self.connection_id.before.splitlines():
-                    logger.debug("%s" % line)
-                logger.debug("generic prompt: %s" % (self.connection_id.match.group()))
+            elif self.child == 8: # In, generic prompt found
                 if self.options.has_key("verbose"):
-                    logger.info("GENERIC PROMPT: %s" % (self.connection_id.match.group()))
-                # causes an issue with $, comment for now, step 5 never called
+                    for line in self.connection_id.before.splitlines():
+                        logger.info("%s" % line)
+                    logger.info("Generic prompt found: Buffer=<%s>" % (self.connection_id.match.group()))
+                # Set prompt, READ: it causes an issue with $, needs escape, comment for now
                 #self.prompt = self.connection_id.match.group()
-                if self.options.has_key("verbose"):
-                    logger.info("GENERIC PROMPT: %s" % (self.connection_id.after))
-                # everything up to the prompt
+                # Return everything up to the prompt
                 retVal = self.connection_id.before
-                # prompt
-                #retVal = self.connection_id.match.group()
-                # whatever follows
-                #retVal = self.connection_id.after
                 break
             else:
                 if self.options.has_key("verbose"):
-                    logger.info("UNEXPECTED: %s" % (self.connection_id.before))
+                    logger.info("Unexpected index %s: Buffer=<%s>" % (self.child, self.connection_id.before))
                 self.connection_id.close()
-                logger.error("UNEXPECTED: %s" % (self.connection_id.before))
                 break
         return retVal
 
-    def __OpenSsh(self):
+    def __OpenSsh(self, t_out=120):
+
+        """This function spawns the ssh connection
+
+        Inputs:     - Int: timeout
+
+        Outputs:    - Int: connection id
+        """
+
         options = ""
         if self.options.has_key("port"):
             options += "-p %s" % self.options["port"]
@@ -110,7 +137,15 @@ class Connect(object):
                              self.ssh_options, self.username, options, self.host))
         return self.connection_id
         
-    def __OpenTelnet(self):
+    def __OpenTelnet(self, t_out=120):
+
+        """This function spawns the ssh connection
+
+        Inputs:     - Int: timeout
+
+        Outputs:    - Int: connection id
+        """
+
         port = ""
         if self.options.has_key("port"):
             port = self.options["port"]
@@ -118,77 +153,100 @@ class Connect(object):
                              self.host, port))
         return self.connection_id
 
-    def Open(self):
-        if self.__OpenSsh() and self.__Expect():
+    def Open(self, t_out=60):
+
+        """This function  opens the ssh or telnet connections
+        and get to the prompt
+
+        Inputs:     - Int: timeout
+
+        Outputs:    - Bool
+        """
+
+        if self.__OpenSsh(t_out) and self.__Expect():
             return True
-        if self.__OpenTelnet() and self.__Expect():
+        if self.__OpenTelnet(t_out) and self.__Expect():
             return True
         logger.error("Could not open connection")
         assert False
     
     def Run(self, cmd_list):
-        logger.debug("Run In 1: %s", time.clock()) 
+
+        """This function executes a list of commands
+        and returns up to the prompt
+
+        Inputs:     - List: list of commands
+
+        Outputs:    - String: up to the prompt
+        """
+
+        if not cmd_list:
+            logger.error("Empty Command List") 
+            assert False
         if not self.connection_id:
             logger.error("Connection is not open %s" % self.connection_id)
             assert False
         for line in cmd_list:
-            logger.debug("Run In 2: %s", time.clock())
+            #logger.debug("Before sending: %s", time.clock())
             self.connection_id.sendline(line)
-            logger.debug("Run In 3: %s", time.clock()) 
+            #logger.debug("After sending: %s", time.clock())
             res = self.__Expect()
-            for line in res.splitlines():
-                #res_obj = re.search(r'.*Device (.*) does not exist', line)
-                #if res_obj:
-                #    logger.error("Error, %s" % res_obj.group())
-                #    assert False
-                res_obj = re.search(r'(ERROR|Error|error):.*', line)
-                if res_obj:
-                    logger.error("Error, %s" % res_obj.group())
-                    assert False
-                res_obj = re.search(r'RTNETLINK answers:(.*)', line)
-                if res_obj:
-                    logger.error("Error, %s" % res_obj.group())
-                    assert False
-                res_obj = re.search(r'\% Invalid command at \'\^\" marker', line)
-                if res_obj:
-                    logger.error("Error, %s" % res_obj.group())
-                    assert False
-        logger.debug("Run Out: %s", time.clock()) 
+            if res:
+                error_string = ["(ERROR|Error|error):.*"]
+                error_string.append("RTNETLINK answers:(.*)") 
+                error_string.append("Unknown command -(.*)") 
+                error_string.append("\% Invalid command at \'\^\' marker") 
+                for line in res.splitlines():
+                    for e in error_string:
+                        res_obj = re.search(r'{0}'.format(e), line)
+                        if res_obj:
+                            logger.error("Error, %s" % res_obj.group())
+                            assert False
         return res
 
     def Close(self):
+
+        """This function close the conn id
+
+        Inputs:     - None
+
+        Outputs:    - None
+        """
+
         if not self.connection_id:
             logger.error("Connection is not open %s" % self.connection_id)
             assert False
         self.connection_id.close()
 
     def Chew(self, cmd):
-        self.connection_id.sendline(cmd)
+
+        """This function close the conn id
+
+        Inputs:     - None
+
+        Outputs:    - None
+        """
+
         if not self.connection_id:
             logger.error("Connection is not open %s" % self.connection_id)
             assert False
+        self.connection_id.sendline(cmd)
         while True:
             self.child = self.connection_id.expect([
                          pexpect.TIMEOUT, 
                          pexpect.EOF, 
                          self.line_chew])
             if self.child == 0: # Timeout
-                if self.options.has_key("verbose"):
-                    logger.info("TIMEOUT: %s" % (self.connection_id.before))
+                logger.error("Timeout Expired, Buffer=<%s>" % (self.connection_id.before))
             elif self.child == 1: 
-                if self.options.has_key("verbose"):
-                    logger.info("EOF: %s" % (self.connection_id.before))
                 self.connection_id.close()
-                logger.error("EOF: %s" % (self.connection_id.before))
-                self.connection_id.close()
+                logger.error("EOF received: Buffer=<%s>" % (self.connection_id.before))
                 assert False
             elif self.child == 2: # In
                 ts = time.time()
                 st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
                 logger.info("%s %s" % (st, self.connection_id.match.group(1)))
             else:
-                if self.options.has_key("verbose"):
-                    logger.info("UNEXPECTED: %s" % (self.connection_id.before))
                 self.connection_id.close()
                 logger.error("UNEXPECTED: %s" % (self.connection_id.before))
                 assert False

@@ -221,6 +221,39 @@ class System(object):
             r.CheckRoute()
 
 
+class Connectivity(object):
+
+    def __init__(self):
+        self.vlan = None
+        self.port_channel = None
+        self.mtus = [ ]
+        self.networks = [ ]
+        net_a = Network()
+        net_b = Network()
+        self.networks.append(net_a)
+        self.networks.append(net_b)
+
+    def AddIpv4Networks(self, nets):
+        assert len(nets) == 2
+        self.networks[0].AddIpv4(nets[0])
+        self.networks[1].AddIpv4(nets[1])
+
+    def AddIpv6Networks(self, nets):
+        assert len(nets) == 2
+        self.networks[0].AddIpv6(nets[0])
+        self.networks[1].AddIpv6(nets[1])
+
+    def AddVrs(self, vrs):
+        assert len(vrs) == 2
+        self.networks[0].vr = vrs[0]
+        self.networks[1].vr = vrs[1]
+
+    def Display(self):
+        for n in self.networks:
+            n.Display()
+
+
+
 class Link(object):
 
     def __init__(self, name):
@@ -238,8 +271,9 @@ class Link(object):
             intf = self.interfaces[i]
             net = conn.networks[i]
             mtu = conn.mtus[i]
-            intf.AddLink(node, conn, net, mtu)
-            intf.AddConnectivity(node, conn, net)
+            node.AddVlan(conn.vlan)
+            node.AddPortChannel(conn.port_channel, intf)
+            node.AddNetworkInterface(intf, net, conn.vlan, mtu)
 
     def CheckConnectivity(self):
         node = self.nodes[0]
@@ -261,3 +295,6 @@ class Link(object):
             logger.debug("Interfaces %s" % n.name)
         for c in self.connections:
             c.Display()
+
+
+

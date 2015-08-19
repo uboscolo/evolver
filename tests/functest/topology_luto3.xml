@@ -14,7 +14,7 @@
         <make name="Cisco" model="Nexus" type="5596"/>
     </device>
     <!-- All Links from DUT to next hop switch -->
-    <link bandwidth="10G" node_a="evo1" interface_a="5/10" node_b="evo-sw1" interface_b="1/1">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/10" node_b="evo-sw1" interface_b="Ethernet1/1">
         <connectivity vlan="1513" port_channel="1">
             <network ipv4_a="172.17.0.1/24" ipv6_a="fd00:0001:0000::1/64" vr_a="pgw-1" ipv4_b="172.17.0.129/24" ipv6_b="fd00:0001:0000::81/64" vr_b="s5-1"/>
         </connectivity>
@@ -25,7 +25,7 @@
             <network ipv4_a="172.21.0.1/24" ipv6_a="fd00:0005:0000::1/64" vr_a="auth-1" ipv4_b="172.21.0.129/24" ipv6_b="fd00:0005:0000::81/64" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/11" node_b="evo-sw1" interface_b="1/2">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/11" node_b="evo-sw1" interface_b="Ethernet1/2">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -36,7 +36,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/12" node_b="evo-sw1" interface_b="1/3">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/12" node_b="evo-sw1" interface_b="Ethernet1/3">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -47,7 +47,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/13" node_b="evo-sw1" interface_b="1/4">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/13" node_b="evo-sw1" interface_b="Ethernet1/4">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -58,7 +58,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/14" node_b="evo-sw1" interface_b="1/5">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/14" node_b="evo-sw1" interface_b="Ethernet1/5">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -69,7 +69,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/15" node_b="evo-sw1" interface_b="1/6">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/15" node_b="evo-sw1" interface_b="Ethernet1/6">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -80,7 +80,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/16" node_b="evo-sw1" interface_b="1/7">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/16" node_b="evo-sw1" interface_b="Ethernet1/7">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -91,7 +91,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/17" node_b="evo-sw1" interface_b="1/8">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/17" node_b="evo-sw1" interface_b="Ethernet1/8">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -102,7 +102,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/18" node_b="evo-sw1" interface_b="1/9">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/18" node_b="evo-sw1" interface_b="Ethernet1/9">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -113,7 +113,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/19" node_b="evo-sw1" interface_b="1/10">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/19" node_b="evo-sw1" interface_b="Ethernet1/10">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -124,7 +124,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/10" node_b="evo-sw1" interface_b="1/11">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/10" node_b="evo-sw1" interface_b="Ethernet1/11">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -135,7 +135,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/11" node_b="evo-sw1" interface_b="1/12">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/11" node_b="evo-sw1" interface_b="Ethernet1/12">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -146,7 +146,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/12" node_b="evo-sw1" interface_b="1/13">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/12" node_b="evo-sw1" interface_b="Ethernet1/13">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -157,7 +157,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/13" node_b="evo-sw1" interface_b="1/14">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/13" node_b="evo-sw1" interface_b="Ethernet1/14">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -168,7 +168,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/14" node_b="evo-sw1" interface_b="1/15">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/14" node_b="evo-sw1" interface_b="Ethernet1/15">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -179,7 +179,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/15" node_b="evo-sw1" interface_b="1/16">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/15" node_b="evo-sw1" interface_b="Ethernet1/16">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -190,7 +190,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/16" node_b="evo-sw1" interface_b="1/17">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/16" node_b="evo-sw1" interface_b="Ethernet1/17">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -201,7 +201,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/17" node_b="evo-sw1" interface_b="1/18">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/17" node_b="evo-sw1" interface_b="Ethernet1/18">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -212,7 +212,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/18" node_b="evo-sw1" interface_b="1/19">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/18" node_b="evo-sw1" interface_b="Ethernet1/19">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -223,7 +223,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/19" node_b="evo-sw1" interface_b="1/20">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/19" node_b="evo-sw1" interface_b="Ethernet1/20">
         <connectivity vlan="1513" port_channel="1">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -234,7 +234,7 @@
             <network vr_a="auth-1" vr_b="au-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/20" node_b="evo-sw2" interface_b="1/1">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/20" node_b="evo-sw2" interface_b="Ethernet1/1">
         <connectivity vlan="1514" port_channel="2">
             <network ipv4_a="172.17.1.1/24" ipv6_a="fd00:0001:0001::1/64" vr_a="pgw-1" ipv4_b="172.17.1.129/24" ipv6_b="fd00:0001:0001::81/64" vr_b="s5-1"/>
         </connectivity>
@@ -242,7 +242,7 @@
             <network ipv4_a="172.19.1.1/24" ipv6_a="fd00:0003:0001::1/64" vr_a="ip-1" ipv4_b="172.19.1.129/24" ipv6_b="fd00:0003:0001::81/64" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/21" node_b="evo-sw2" interface_b="1/2">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/21" node_b="evo-sw2" interface_b="Ethernet1/2">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -250,7 +250,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/22" node_b="evo-sw2" interface_b="1/3">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/22" node_b="evo-sw2" interface_b="Ethernet1/3">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -258,7 +258,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/23" node_b="evo-sw2" interface_b="1/4">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/23" node_b="evo-sw2" interface_b="Ethernet1/4">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -266,7 +266,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/24" node_b="evo-sw2" interface_b="1/5">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/24" node_b="evo-sw2" interface_b="Ethernet1/5">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -274,7 +274,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/25" node_b="evo-sw2" interface_b="1/6">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/25" node_b="evo-sw2" interface_b="Ethernet1/6">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -282,7 +282,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/26" node_b="evo-sw2" interface_b="1/7">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/26" node_b="evo-sw2" interface_b="Ethernet1/7">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -290,7 +290,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/27" node_b="evo-sw2" interface_b="1/8">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/27" node_b="evo-sw2" interface_b="Ethernet1/8">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -298,7 +298,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/28" node_b="evo-sw2" interface_b="1/9">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/28" node_b="evo-sw2" interface_b="Ethernet1/9">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -306,7 +306,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="5/29" node_b="evo-sw2" interface_b="1/10">
+    <link bandwidth="10G" node_a="evo1" interface_a="5/29" node_b="evo-sw2" interface_b="Ethernet1/10">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -314,7 +314,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/20" node_b="evo-sw2" interface_b="1/11">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/20" node_b="evo-sw2" interface_b="Ethernet1/11">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -322,7 +322,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/21" node_b="evo-sw2" interface_b="1/12">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/21" node_b="evo-sw2" interface_b="Ethernet1/12">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -330,7 +330,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/22" node_b="evo-sw2" interface_b="1/13">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/22" node_b="evo-sw2" interface_b="Ethernet1/13">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -338,7 +338,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/23" node_b="evo-sw2" interface_b="1/14">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/23" node_b="evo-sw2" interface_b="Ethernet1/14">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -346,7 +346,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/24" node_b="evo-sw2" interface_b="1/15">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/24" node_b="evo-sw2" interface_b="Ethernet1/15">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -354,7 +354,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/25" node_b="evo-sw2" interface_b="1/16">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/25" node_b="evo-sw2" interface_b="Ethernet1/16">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -362,7 +362,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/26" node_b="evo-sw2" interface_b="1/17">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/26" node_b="evo-sw2" interface_b="Ethernet1/17">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -370,7 +370,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/27" node_b="evo-sw2" interface_b="1/18">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/27" node_b="evo-sw2" interface_b="Ethernet1/18">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -378,7 +378,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/28" node_b="evo-sw2" interface_b="1/19">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/28" node_b="evo-sw2" interface_b="Ethernet1/19">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -386,7 +386,7 @@
             <network vr_a="ip-1" vr_b="sgi-1"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo1" interface_a="6/29" node_b="evo-sw2" interface_b="1/20">
+    <link bandwidth="10G" node_a="evo1" interface_a="6/29" node_b="evo-sw2" interface_b="Ethernet1/20">
         <connectivity vlan="1514" port_channel="2">
             <network vr_a="pgw-1" vr_b="s5-1"/>
         </connectivity>
@@ -395,7 +395,7 @@
         </connectivity>
     </link>
     <!-- All Links from test tools to next hop switch -->
-    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/25" node_b="luto3" interface_b="eth2">
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="Ethernet1/25" node_b="luto3" interface_b="eth2">
         <connectivity vlan="1003">
             <network ipv4_a="172.18.3.129/24" ipv6_a="fd00:0002:0003::81/64" vr_a="s5-1" ipv4_b="172.18.3.1/24" ipv6_b="fd00:0002:0003::1/64" vr_b="1"/>
         </connectivity>
@@ -409,7 +409,7 @@
             <network ipv4_a="172.20.67.129/24" ipv6_a="fd00:0004:0043::81/64" vr_a="sgi-1" ipv4_b="172.20.67.1/24" ipv6_b="fd00:0004:0043::1/64" vr_b="22"/>
         </connectivity>
     </link>
-    <link bandwidth="10G" node_a="evo-sw1" interface_a="1/26" node_b="luto3" interface_b="eth3">
+    <link bandwidth="10G" node_a="evo-sw1" interface_a="Ethernet1/26" node_b="luto3" interface_b="eth3">
         <connectivity vlan="1131">
             <network ipv4_a="172.18.131.129/24" ipv6_a="fd00:0002:0083::81/64" vr_a="s5-1" ipv4_b="172.18.131.1/24" ipv6_b="fd00:0002:0083::1/64" vr_b="3"/>
         </connectivity>

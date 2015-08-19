@@ -34,38 +34,6 @@ class Network(object):
                 self.ipv6.network, self.ipv6.broadcast, self.ipv6.prefixlen, self.vr))
 
 
-class Connectivity(object):
-
-    def __init__(self):
-        self.vlan = None
-        self.mtus = [ ]
-        self.port_channel = None
-        self.networks = [ ]
-        net_a = Network()
-        net_b = Network()
-        self.networks.append(net_a)
-        self.networks.append(net_b)
-
-    def AddIpv4Networks(self, nets):
-        assert len(nets) == 2
-        self.networks[0].AddIpv4(nets[0])
-        self.networks[1].AddIpv4(nets[1])
-
-    def AddIpv6Networks(self, nets):
-        assert len(nets) == 2
-        self.networks[0].AddIpv6(nets[0])
-        self.networks[1].AddIpv6(nets[1])
-
-    def AddVrs(self, vrs):
-        assert len(vrs) == 2
-        self.networks[0].vr = vrs[0]
-        self.networks[1].vr = vrs[1]
-
-    def Display(self):
-        for n in self.networks:
-            n.Display()
-
-
 class Loopback(object):
 
     def __init__(self):
