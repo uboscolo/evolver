@@ -77,7 +77,7 @@ class CallModel(object):
             cmd_list.append("        iterate-count unlimited")
             cmd_list.append("        make-call apn %s delay 1" % apns[0].name)
             cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
-            cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
+            cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["delay"])
             cmd_list.append("        break-call delay 1")
             cmd_list.append("    #exit")
         elif self.name == "vzw-hsgw-static-2":
@@ -95,7 +95,7 @@ class CallModel(object):
             cmd_list.append("        iterate-count unlimited")
             cmd_list.append("        make-call apn %s delay 1" % apns[0].name)
             cmd_list.append("        new-pdn apn %s delay 1" % apns[1].name)
-            cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["initial_delay"])
+            cmd_list.append("        delete-pdn apn internet-1 delay %s" % options["delay"])
             cmd_list.append("        break-call delay 1")
             cmd_list.append("    #exit")
         else:

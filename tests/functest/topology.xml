@@ -1,46 +1,46 @@
 <?xml version="1.0"?>
 <system name="new system">
     <!-- All Devices -->
-    <device name="luto1" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto1" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto3" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto3" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto4" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto4" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto5" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto5" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto6" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto6" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto7" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto7" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto16" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto16" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto17" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto17" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto18" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto18" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto19" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto19" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="luto20" domain="mitg-tew01.cisco.com" type="debian" configure="yes">
+    <device name="luto20" domain="mitg-bxb300.cisco.com" type="debian" configure="yes">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="evo1" domain="mitg-tew01.cisco.com" type="staros">
+    <device name="evo1" domain="mitg-bxb300.cisco.com" type="staros">
         <make name="Cisco" model="ASR5500" type="MIO-DPC"/>
     </device>
-    <device name="evo-sw1" domain="mitg-tew01.cisco.com" type="switch" configure="yes">
+    <device name="evo-sw1" domain="mitg-bxb300.cisco.com" type="switch" configure="yes">
         <make name="Cisco" model="Nexus" type="5596"/>
     </device>
-    <device name="evo-sw2" domain="mitg-tew01.cisco.com" type="switch" configure="yes">
+    <device name="evo-sw2" domain="mitg-bxb300.cisco.com" type="switch" configure="yes">
         <make name="Cisco" model="Nexus" type="5596"/>
     </device>
     <!-- All Links from DUT to next hop switch -->
@@ -723,7 +723,7 @@
     </link>
     <!-- All routes from UE side to service and vice-versa -->
     <route type="static" node_from="luto1" node_to="evo1" node_via="evo-sw1">
-        <network v4_addr_from="172.29.1.129/32" vr_from="1" v4_addr_to="172.29.0.1/32" vr_to="auth-1" v4_addr_via="172.18.1.129/24" vr_via="au-1"/>
+        <network v4_addr_from="172.29.1.129/32" vr_from="1" num_from="4" v4_addr_to="172.29.0.1/32" vr_to="auth-1" v4_addr_via="172.18.1.129/24" vr_via="au-1"/>
         <network v6_addr_from="fd00:0013:0001::81/128" vr_from="1" v6_addr_to="fd00:0013:0000::1/128" vr_to="auth-1" v6_addr_via="fd00:0002:0001::81/64" vr_via="au-1"/>
     </route>
     <route type="static" node_from="luto1" node_to="evo1" node_via="evo-sw1">
@@ -733,7 +733,7 @@
         <network v6_addr_from="fd00:0013:0001::81/128" vr_from="1" v6_addr_to="fd00:0013:0000::3/128" vr_to="auth-1" v6_addr_via="fd00:0002:0001::81/64" vr_via="au-1"/>
     </route>
     <route type="static" node_from="evo1" node_to="luto1" node_via="evo-sw1">
-        <network v4_addr_from="172.29.0.1/32" vr_from="auth-1" v4_addr_to="172.29.1.129/32" vr_to="1" v4_addr_via="172.21.0.129/24" vr_via="au-1"/>
+        <network v4_addr_from="172.29.0.1/32" vr_from="auth-1" v4_addr_to="172.29.1.0/24" vr_to="1" v4_addr_via="172.21.0.129/24" vr_via="au-1"/>
         <network v6_addr_from="fd00:0013:0000::1/128" vr_from="auth-1" v6_addr_to="fd00:0013:0001::81/128" vr_to="1" v6_addr_via="fd00:0005:0000::81/64" vr_via="au-1"/>
     </route>
     <route type="static" node_from="luto3" node_to="evo1" node_via="evo-sw1">

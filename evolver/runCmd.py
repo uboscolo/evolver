@@ -3,7 +3,7 @@
 import sys
 import getpass
 import optparse
-from connect import *
+from connect2 import *
 
 def main(argv):
     parser = optparse.OptionParser(usage="usage: %prog [options] target")
@@ -45,14 +45,19 @@ def main(argv):
     if opts.password:
         password = opts.password
     cmd_list.append("show version")
+    cmd_list.append("show card table")
+    cmd_list.append("show port table")
+    cmd_list.append("show hardware version")
     if opts.cmd_list:
         cmd_list = []
         cmd_list.append(opts.cmd_list)
 
+    #options = { 'class' : 'mitg' }
+    options["class"] = "mitg"
     c = Connect(hostname, username, password, **options)
     c.Open()
     r = c.Run(cmd_list)
-    print "%s" % r
+    print("{0}".format(r))
     c.Close()
 
 if __name__ == "__main__":

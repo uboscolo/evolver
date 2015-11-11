@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <system name="new system">
-    <device name="luto1" domain="mitg-tew01.cisco.com" type="debian">
+    <device name="luto1" domain="mitg-bxb300.cisco.com" type="debian">
         <make name="Cisco" model="UCS-C" type="c220"/>
     </device>
-    <device name="evo1" domain="mitg-tew01.cisco.com" type="staros">
+    <device name="evo1" domain="mitg-bxb300.cisco.com" type="staros">
         <make name="Cisco" model="ASR5500" type="MIO-DPC"/>
     </device>
-    <device name="evo-sw1" domain="mitg-tew01.cisco.com" type="switch">
+    <device name="evo-sw1" domain="mitg-bxb300.cisco.com" type="switch">
         <make name="Cisco" model="Nexus" type="5596"/>
     </device>
     <link bandwidth="10G" node_a="evo1" interface_a="5/10" node_b="evo-sw1" interface_b="1/1">
