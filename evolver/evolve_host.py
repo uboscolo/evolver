@@ -157,7 +157,7 @@ class DebianHost(Host):
         # create route
         if not found:
             if self.verify_only:
-                logger.error("Route not found, can't proceed")
+                logger.debug("Route to %s via %s not found" % (to_target, via_target))
                 assert False
             r = c.Run([route_string])
 
@@ -280,7 +280,7 @@ class StarOsHost(Host):
                     break
         # create route
         if not found:
-            logger.error("Route not found, can't proceed")
+            logger.debug("Route to %s via %s not found" % (to_target, via_target))
             assert False
 
     def PingCheck(self, local_net, remote_net, ver=4):

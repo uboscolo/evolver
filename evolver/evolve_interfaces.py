@@ -291,7 +291,11 @@ class SwitchInterface(Interface):
         if not self.status:
             logger.debug("Looking for interface %s ..." % self.name)
             cmd_string = "show interface %s brief" % self.name
-            r = c.Run([cmd_string])
+            try:
+                r = c.Run([cmd_string])
+            except Exception as e:
+                logger.debug("Interface not yet created: {0}".format(e))
+                return
             for line in r.splitlines():
                 res_obj = re.search(r'^([a-zA-Z]+)([\d/]+) ', line)
                 if res_obj:
